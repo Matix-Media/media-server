@@ -1,0 +1,42 @@
+{
+    "browse": {
+        "selectProfile": {
+            "whoIsWatching": "Who is watching?"
+        },
+        "billboard": {
+            "watchNow": "Watch Now"
+        },
+        "header": {
+            "home": "Home",
+            "search": "Search"
+        },
+        "sliders": {
+            "new": "New",
+            "popular": "Popular",
+            "continue": "Continue"
+        }
+    },
+    "details": {
+        "seasons": "0 Seasons | 1 Season | {count} Seasons",
+        "watch": "Watch",
+        "continue": "Continue",
+        "currentEpisode": "Season {season}, Episode {episode}",
+        "season": "Season {season}",
+        "episode": "Episode {episode}: {title}",
+        "more": "more",
+        "time": {
+            "hoursAndMinutes": "{hours} hr. {minutes} min.",
+            "minutes": "{minutes} min.",
+            "currentMinute": "0th minute | first minute | second minute | {minute}th minute"
+        },
+        "departments": {
+            "directing": "Directing:",
+            "cast": "Cast:",
+            "writing": "Writing:"
+        }
+    },
+    "watch": {
+        "season": "Season",
+        "episode": "Episode"
+    }
+}

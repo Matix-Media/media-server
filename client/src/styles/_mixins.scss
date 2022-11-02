@@ -1,0 +1,6 @@
+@mixin glass {
+    box-shadow: var(--glass);
+    background-color: var(--glass-background);
+    border-radius: var(--border-radius);
+    backdrop-filter: var(--glass-blur);
+}

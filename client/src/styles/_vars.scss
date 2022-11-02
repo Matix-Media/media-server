@@ -1,0 +1,35 @@
+@import "src/assets/fonts/poppins/poppins.css";
+
+
+:root {
+    /* Color styles */
+    --background: rgba(24, 25, 41, 1);
+    --background-color-values: 24, 25, 41;
+    --foreground: rgba(184, 185, 221, 1);
+    --white: rgba(255, 255, 255, 1);
+    --white-50: rgba(255, 255, 255, 0.5);
+    --glass-background: rgba(255, 255, 255, 0.02);
+    --glass-background-active: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.03);
+    --glass-border-active: rgba(255, 255, 255, 0.04);
+    --image-glass-border: rgba(255, 255, 255, 0.1);
+
+    /* Text-size styles */
+    --font-12: 300 12px Poppins, sans-serif;
+    --font-16: 16px Poppins, sans-serif;
+    --font-20: 400 20px Poppins, sans-serif;
+    --font-24: 500 24px Poppins, sans-serif;
+    --font-36: 500 36px Poppins, sans-serif;
+    --font-40: 400 40px Poppins, sans-serif;
+    --font-48: 500 48px Poppins, sans-serif;
+    --font-128: 400 128px Poppins, sans-serif;
+
+    /* Effect styles */
+    --glass-blur: blur(5px);
+
+    /* Others */
+    --glass: inset 0 0 0 1px var(--glass-border);
+    --image-glass: inset 0 0 0 1px var(--image-glass-border);
+    --border-radius: 10px;
+    --side-padding: 60px;
+}
