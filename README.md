@@ -1,6 +1,6 @@
 <p align="center">
 
-![](/client/public/favicon.svg)
+<img src="https://github.com/Matix-Media/media-server/blob/master/client/public/favicon.svg?raw=true" height="256px" />
 
 </p>
 
