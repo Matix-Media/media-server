@@ -4,7 +4,9 @@
     "main": "src/index.ts",
     "license": "MIT",
     "scripts": {
-        "dev": "node --loader ts-node/esm --no-warnings --inspect ."
+        "dev": "node --loader ts-node/esm --no-warnings --inspect .",
+        "build": "tsc -p tsconfig.json",
+        "start": "node dist/index.js"
     },
     "devDependencies": {
         "@types/fluent-ffmpeg": "^2.1.20",

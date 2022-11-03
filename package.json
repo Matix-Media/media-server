@@ -1,0 +1,11 @@
+{
+    "name": "media-server",
+    "version": "0.1.0-alpha",
+    "license": "MIT",
+    "scripts": {
+        "install": "node build.js --install",
+        "build": "node build.js --build",
+        "production": "node build.js --install --build && cd server && yarn start",
+        "start": "cd server && yarn start"
+    }
+}

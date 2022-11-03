@@ -1,4 +1,3 @@
-import config from "../../config.json";
 import "reflect-metadata";
 import { TMDB } from "./lib/tmdb";
 import { Indexer } from "./lib/indexer";
@@ -27,6 +26,7 @@ import ContentRating from "./entities/contentRating";
 import { Static, Type } from "@sinclair/typebox";
 import Ajv from "ajv";
 import IndexLog from "./entities/IndexLog";
+import { readFileSync } from "fs";
 
 declare module "fastify" {
     export interface FastifyInstance {
@@ -35,6 +35,13 @@ declare module "fastify" {
 }
 
 const MediaServerConfig = Type.Object({
+    database: Type.Object({
+        host: Type.String(),
+        port: Type.Number(),
+        username: Type.String(),
+        password: Type.String(),
+        database: Type.String(),
+    }),
     saveDirectory: Type.String(),
     port: Type.Number(),
     ffmpeg: Type.Optional(Type.String()),
@@ -104,11 +111,11 @@ export class MediaServer {
 
         this.dataSource = new DataSource({
             type: "mysql",
-            host: "localhost",
-            port: 3306,
-            username: "root",
-            password: "",
-            database: "media_server",
+            host: config.database.host,
+            port: config.database.port,
+            username: config.database.username,
+            password: config.database.password,
+            database: config.database.database,
             synchronize: true, // Enable in production and when changing database
             entities: [
                 CastMember,
@@ -156,5 +163,7 @@ export class MediaServer {
     }
 }
 
+// Load config
+const config = JSON.parse(readFileSync("../config.json", "utf8"));
 const server = new MediaServer(config as any);
 server.boot();

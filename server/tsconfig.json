@@ -5,7 +5,9 @@
         "moduleResolution": "node",
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-        "target": "ESNext"
+        "module": "commonjs",
+        "target": "ESNext",
+        "outDir": "dist"
     },
     "include": ["./src/**/*"],
     "exclude": ["../save_data/**/*"]

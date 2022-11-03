@@ -1,4 +1,13 @@
 {
+    "//": "Database connection information",
+    "database": {
+        "host": "localhost",
+        "port": 3306,
+        "username": "root",
+        "password": "",
+        "database": "media_server"
+    },
+
     "//": "Information like hover previews are saved in here",
     "saveDirectory": "../save_data",
 
