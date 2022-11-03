@@ -3,11 +3,19 @@ import { computed, onMounted, ref, watch } from "vue";
 import API, { Profile, Browse } from "../../lib/api";
 import Icon from "src/components/Icon.vue";
 import { useRoute, useRouter } from "vue-router";
+import { useTitle } from "@vueuse/core";
 
 const route = useRoute();
 const router = useRouter();
 const api = API.getInstance();
 const profiles = ref<Profile[]>(await api.getProfiles());
+useTitle("", { titleTemplate: API.getTitleTemplate });
+
+if (profiles.value.length == 0) createProfile();
+
+function createProfile() {
+    router.push({ name: "CreateProfile", query: { next: route.query.next } });
+}
 
 async function selectProfile(profile: Profile) {
     api.setProfile(profile);
@@ -17,7 +25,7 @@ async function selectProfile(profile: Profile) {
 
 <template>
     <div class="select-profile">
-        <h1>{{ $t("browse.selectProfile.whoIsWatching") }}</h1>
+        <h1>{{ $t("profile.select.whoIsWatching") }}</h1>
         <div class="profiles">
             <button class="profile" v-for="profile in profiles" @click="selectProfile(profile)">
                 <div class="profile-image" v-wave>
@@ -27,7 +35,7 @@ async function selectProfile(profile: Profile) {
                     {{ profile.name }}
                 </p>
             </button>
-            <button class="add-profile profile">
+            <button class="add-profile profile" @click="createProfile">
                 <div class="profile-image" v-wave>
                     <Icon icon="add"></Icon>
                 </div>
@@ -51,6 +59,8 @@ async function selectProfile(profile: Profile) {
         gap: 50px;
         margin-top: 60px;
         align-items: flex-start;
+        flex-wrap: wrap;
+        justify-content: center;
 
         .profile {
             cursor: pointer;

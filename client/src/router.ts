@@ -2,6 +2,7 @@ import { createRouter, createWebHistory, RouteLocationNormalized, RouteLocationR
 import WithHeader from "src/views/WithHeader.vue";
 import Browse from "src/views/Browse.vue";
 import SelectProfile from "src/views/profile/Select.vue";
+import CreateProfile from "src/views/profile/Create.vue";
 import Movie from "src/views/Movie.vue";
 import Show from "src/views/Show.vue";
 import Stream from "src/views/Stream.vue";
@@ -13,7 +14,7 @@ const navigationGuards: {
     async requiresProfile(to, from) {
         const api = API.getInstance();
         await api.initialize();
-        if (!api) return { name: "SelectProfile", query: { next: to.path } };
+        if (!api.selectedProfile) return { name: "SelectProfile", query: { next: to.path } };
     },
 };
 
@@ -22,6 +23,11 @@ const routes: RouteRecordRaw[] = [
         path: "/profile/select",
         name: "SelectProfile",
         component: SelectProfile,
+    },
+    {
+        path: "/profile/create",
+        name: "CreateProfile",
+        component: CreateProfile,
     },
     {
         path: "/movie/watch/:id",

@@ -1,8 +1,21 @@
 {
-    "browse": {
-        "selectProfile": {
+    "profile": {
+        "menu": {
+            "switch": "Switch Profile",
+            "logout": "Logout"
+        },
+        "select": {
             "whoIsWatching": "Who is watching?"
         },
+        "create": {
+            "title": "Create New Profile",
+            "profileName": "Profile Name",
+            "create": "Create"
+        }
+    },
+    "browse": {
+        "title": "Browse",
+
         "billboard": {
             "watchNow": "Watch Now"
         },
@@ -27,7 +40,8 @@
         "time": {
             "hoursAndMinutes": "{hours} hr. {minutes} min.",
             "minutes": "{minutes} min.",
-            "currentMinute": "0th minute | first minute | second minute | {minute}th minute"
+            "currentMinute": "0th min. | First min. | Second min. | {minute}th min.",
+            "finished": "Finished"
         },
         "departments": {
             "directing": "Directing:",
@@ -36,6 +50,7 @@
         }
     },
     "watch": {
+        "title": "Watch {title}",
         "season": "Season",
         "episode": "Episode"
     }

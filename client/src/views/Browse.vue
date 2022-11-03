@@ -2,15 +2,19 @@
 import API, { Progress, Watchable } from "src/lib/api";
 import Button from "src/components/Button.vue";
 import Icon from "src/components/Icon.vue";
-import { ref } from "vue";
-import Clickable from "src/components/Clickable.vue";
+import { nextTick, onMounted, ref } from "vue";
 import Slider from "src/components/Slider.vue";
 import { useRouter } from "vue-router";
 import WatchablePlaceholder from "src/assets/images/watchable-placeholder.jpg";
+import { useTitle } from "@vueuse/core";
+import { useI18n } from "vue-i18n";
 
 const router = useRouter();
 const api = API.getInstance();
 const browse = await api.getBrowse();
+const { t } = useI18n();
+
+useTitle(t("browse.title"), { titleTemplate: API.getTitleTemplate });
 
 function navigate(watchable: Watchable & { progress: Progress[] }, watch: boolean) {
     if (watch) {
@@ -52,6 +56,13 @@ function navigate(watchable: Watchable & { progress: Progress[] }, watch: boolea
         </div>
         <div class="sliders">
             <Slider :title="$t('browse.sliders.' + slider.type)" v-for="slider in browse.sliders" :watchables="slider.slides" />
+            <div
+                class="background"
+                :style="{
+                    backgroundImage:
+                        'url(' + (browse.billboard.backdrop ? api.getImageUrl(browse.billboard.backdrop.id) : WatchablePlaceholder) + ')',
+                }"
+            ></div>
         </div>
     </div>
 </template>
@@ -75,6 +86,7 @@ function navigate(watchable: Watchable & { progress: Progress[] }, watch: boolea
         align-items: flex-start;
         padding: 0 var(--side-padding);
         position: relative;
+        transition: background-image 0.2s;
 
         .logo {
             width: 375px;
@@ -141,6 +153,29 @@ function navigate(watchable: Watchable & { progress: Progress[] }, watch: boolea
         display: flex;
         flex-direction: column;
         gap: 35px;
+        position: relative;
+    }
+
+    .background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        filter: blur(150px);
+        transition: background-image 0.2s;
+
+        &::after {
+            content: "";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(var(--background-color-values), 0.8);
+        }
     }
 }
 </style>

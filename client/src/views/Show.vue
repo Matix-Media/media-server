@@ -7,6 +7,7 @@ import Progress from "src/components/Progress.vue";
 import Clickable from "src/components/Clickable.vue";
 import { ref } from "vue";
 import { publicDecrypt } from "crypto";
+import { useTitle } from "@vueuse/core";
 
 const route = useRoute();
 const router = useRouter();
@@ -25,6 +26,8 @@ const firstEpisode =
 const fullDescription = ref(false);
 const fullDescriptions = ref<string[]>([]);
 if (show.movie_content) router.replace({ name: "Movie", params: { id: route.params.id } });
+
+useTitle(show.name, { titleTemplate: API.getTitleTemplate });
 </script>
 
 <template>

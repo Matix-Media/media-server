@@ -7,7 +7,7 @@ import path from "path";
 export default class StreamPart extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string;
-    @Column()
+    @Column({ default: false })
     playlist: boolean;
     @Column()
     has_subtitles: boolean;

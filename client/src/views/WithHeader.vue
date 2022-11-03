@@ -1,12 +1,25 @@
 <script lang="ts" setup>
-import { useAPI } from "src/lib/api";
+import API, { useAPI } from "src/lib/api";
 import { ref } from "vue";
 import Clickable from "src/components/Clickable.vue";
 import Icon from "src/components/Icon.vue";
 import Spinner from "src/assets/images/spinner.svg";
+import { useRoute, useRouter } from "vue-router";
 
 const api = useAPI();
+const router = useRouter();
+const route = useRoute();
 const searchFocused = ref(false);
+const userPopupOpen = ref(false);
+
+function switchProfile() {
+    router.push({ name: "SelectProfile", query: { next: route.path } });
+}
+
+function logout() {
+    api.logout();
+    switchProfile();
+}
 </script>
 
 <template>
@@ -21,8 +34,16 @@ const searchFocused = ref(false);
             </div>
         </div>
         <div class="infos">
-            <Clickable class="user">
+            <Clickable class="user" @click="userPopupOpen = !userPopupOpen">
                 {{ api.selectedProfile?.name.charAt(0).toUpperCase() }}
+                <Transition name="fade-down">
+                    <div class="popup" v-if="userPopupOpen">
+                        <Clickable @click="switchProfile">
+                            {{ $t("profile.menu.switch") }}
+                        </Clickable>
+                        <Clickable @click="logout">{{ $t("profile.menu.logout") }}</Clickable>
+                    </div>
+                </Transition>
             </Clickable>
         </div>
     </header>
@@ -53,6 +74,17 @@ const searchFocused = ref(false);
 }
 
 .fade-enter-from {
+    opacity: 0;
+}
+
+.fade-down-enter-active,
+.fade-down-leave-active {
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.fade-down-enter-from,
+.fade-down-leave-to {
+    transform: translateY(-10%);
     opacity: 0;
 }
 
@@ -158,6 +190,27 @@ header {
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
+
+            .popup {
+                position: absolute;
+                top: calc(100% + 10px);
+                right: 0;
+                width: max-content;
+                @include glass;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+
+                button {
+                    padding: 10px 15px;
+                    transition: background-color 0.2s;
+
+                    &:hover {
+                        background-color: var(--glass-background-active);
+                    }
+                }
+            }
         }
     }
 }

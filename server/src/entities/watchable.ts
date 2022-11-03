@@ -25,19 +25,19 @@ import Show from "./show";
 export default class Watchable extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string;
-    @Column()
+    @Column({ nullable: true })
     tmdb_id?: number;
     @Column()
     type: "show" | "movie";
     @Column()
     @Index({ fulltext: true })
     name: string;
-    @Column({ length: 1000 })
+    @Column({ length: 1000, nullable: true })
     @Index({ fulltext: true })
     description?: string;
-    @Column()
+    @Column({ nullable: true })
     year?: number;
-    @Column()
+    @Column({ nullable: true })
     creator?: string;
     @ManyToMany(() => Genre, (genre) => genre.watchables, { eager: true })
     @JoinTable()
@@ -53,7 +53,7 @@ export default class Watchable extends BaseEntity {
     writers: Relation<CastMember[]>;
     @Column()
     quality: string;
-    @Column({ type: "double" })
+    @Column({ type: "double", nullable: true })
     rating?: number;
     @Column({ default: false })
     adult: boolean;

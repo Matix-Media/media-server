@@ -1,0 +1,40 @@
+{
+    "//": "Information like hover previews are saved in here",
+    "saveDirectory": "../save_data",
+
+    "//": "The port of the web-server",
+    "port": 3000,
+
+    "//": "Path to ffmpeg",
+    "ffmpeg": "./ffmpeg",
+
+    "//": "TMDB (themoviedb) is required for fetching information about media",
+    "tmdb": {
+        "//": "The api key for TMDB",
+        "apiKey": "xxxxxxx"
+    },
+
+    "//": "Auto-index is helpful when you want to automatically index files within a directory (and its sub-directories)",
+    "autoIndex": {
+        "//": "If auto indexing is enabled",
+        "enabled": true,
+
+        "//": "Location of root auto-index directory",
+        "directory": "../auto_index",
+
+        "//": "Automatically remove a file after indexing it",
+        "removeAfterIndexing": false
+    },
+
+    "media": {
+        "//": "This setting us useful for generating preview thumbnails displayed when hovering over the progress bar while watching a media [NOTICE: Enabling this will increase the size required for new media]",
+        "generateThumbnails": true,
+
+        "//": "Change the quality level presets. If you want to only have one, keep one. 0 quality levels will fail. Height: changes the video resolution (the width gets scaled according to the aspect ration of the source media). Bitrate: The bitrate of the generated quality level. CRF: The quality/compression level (0 for lossless, 51 for worst possible)",
+        "qualityLevels": [
+            { "height": 480, "bitrate": 1500, "crf": 30 },
+            { "height": 720, "bitrate": 3000, "crf": 25 },
+            { "height": 1080, "bitrate": 4500, "crf": 23 }
+        ]
+    }
+}

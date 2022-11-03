@@ -46,6 +46,15 @@ const MediaServerConfig = Type.Object({
         directory: Type.String(),
         removeAfterIndexing: Type.Boolean(),
     }),
+    media: Type.Object({
+        generateThumbnails: Type.Boolean(),
+        qualityLevels: Type.Array(
+            Type.Object(
+                { height: Type.Number({ minimum: 1 }), bitrate: Type.Number({ minimum: 1 }), crf: Type.Number({ minimum: 0, maximum: 51 }) },
+                { minProperties: 1 },
+            ),
+        ),
+    }),
 });
 
 export type FastifyInstanceType = FastifyInstance<
@@ -81,7 +90,11 @@ export class MediaServer {
         }
 
         this.saveDirectory = config.saveDirectory;
-        this.indexer = new Indexer(this, config.autoIndex.enabled, config.autoIndex.directory, config.autoIndex.removeAfterIndexing);
+        this.indexer = new Indexer(this, {
+            autoIndex: config.autoIndex,
+            generateThumbnails: config.media.generateThumbnails,
+            qualityLevels: config.media.qualityLevels,
+        });
         this.tmdb = new TMDB(config.tmdb.apiKey);
 
         if (process.platform == "win32") {
@@ -96,7 +109,7 @@ export class MediaServer {
             username: "root",
             password: "",
             database: "media_server",
-            synchronize: false, // Enable in production and when changing database
+            synchronize: true, // Enable in production and when changing database
             entities: [
                 CastMember,
                 Episode,

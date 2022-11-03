@@ -137,6 +137,10 @@ export type MovieStreamInfo = Movie & { watchable: Watchable };
 export default class API {
     private static INSTANCE: API;
 
+    public static getTitleTemplate(titleChunk?: string) {
+        return titleChunk ? `${titleChunk} on Media Server` : "Media Server";
+    }
+
     public static getInstance() {
         if (!this.INSTANCE) this.INSTANCE = new API();
         return this.INSTANCE;
@@ -187,7 +191,7 @@ export default class API {
     private _selectedProfile?: Profile;
 
     private constructor() {
-        this.baseURL = (import.meta.env.DEV ? "http://localhost:3000/" : import.meta.url) + "api/v1/";
+        this.baseURL = (import.meta.env.DEV ? "http://localhost:3000/" : window.location.origin + "/") + "api/v1/";
         this.client = axios.create({ baseURL: this.baseURL });
     }
 
@@ -214,6 +218,12 @@ export default class API {
         localStorage.setItem("profileId", profile.id);
     }
 
+    public logout() {
+        this.client = axios.create({ baseURL: this.baseURL });
+        this._selectedProfile = undefined;
+        localStorage.removeItem("profileId");
+    }
+
     public getImageUrl(id: string | APIImage) {
         if (id instanceof Object) {
             return new URL("image/" + id.id, this.baseURL).href;
@@ -226,9 +236,11 @@ export default class API {
     }
 
     public async getProfiles(): Promise<Profile[]> {
-        return await (
-            await this.client.get("/profiles")
-        ).data;
+        return (await this.client.get("/profiles")).data;
+    }
+
+    public async createProfile(profileName: string): Promise<Profile> {
+        return (await this.client.post("/profile", { name: profileName })).data;
     }
 
     public async getBrowse(): Promise<Browse> {

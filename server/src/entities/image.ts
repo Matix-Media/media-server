@@ -13,9 +13,9 @@ const imageMimeTypes = ["image/jpeg", "image/png", "image/gif", "image/tiff", "i
 export default class Image extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string;
-    @Column()
+    @Column({ nullable: true })
     type?: string;
-    @Column()
+    @Column({ nullable: true })
     source?: string;
     @CreateDateColumn()
     created_on: Date;

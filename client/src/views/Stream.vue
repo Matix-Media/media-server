@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { metaProperty } from "@babel/types";
+import { useTitle } from "@vueuse/core";
 import VideoPlayer from "src/components/VideoPlayer.vue";
 import API, { Episode, EpisodeStreamInfo, MovieStreamInfo } from "src/lib/api";
 import { useI18n } from "vue-i18n";
@@ -14,12 +16,15 @@ let episode: EpisodeStreamInfo;
 let nextEpisode: Episode;
 let movie: MovieStreamInfo;
 let subtitle: string;
-if (isMovie) movie = await api.getMovie(watchableId);
-else {
+if (isMovie) {
+    movie = await api.getMovie(watchableId);
+} else {
     episode = await api.getEpisode(watchableId);
     nextEpisode = episode;
     subtitle = `${t("watch.season")} ${episode.season.season_number}, ${t("watch.episode")} ${episode.episode_number}: ${episode.name}`;
 }
+
+useTitle(t("watch.title", { title: isMovie ? movie!.watchable.name : episode!.season.show.watchable.name }), { titleTemplate: API.getTitleTemplate });
 </script>
 
 <template>

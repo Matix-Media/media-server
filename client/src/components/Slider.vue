@@ -9,13 +9,13 @@ const props = defineProps<{ title: string; watchables: Array<Watchable & { progr
 const router = useRouter();
 const api = API.getInstance();
 const hoveredSlide = ref<string>();
+const leftSlides = ref<string[]>([]);
+const rightSlides = ref<string[]>([]);
 const trailerVisible = ref<string>();
 const trailers = ref<{ [key: string]: string }>({});
 const noTrailerAvailable = ref<string[]>([]);
 
 function onSlideHoverEnter(watchable: Watchable, event: MouseEvent) {
-    hoveredSlide.value = watchable.id;
-
     if (!trailers.value[watchable.id]) {
         api.getTrailer(watchable.id)
             .then((trailer) => {
@@ -33,19 +33,22 @@ function onSlideHoverEnter(watchable: Watchable, event: MouseEvent) {
         }, 1000);
 
         const slide = event.target as HTMLDivElement;
-        const popup = slide.querySelector(".popup") as HTMLDivElement;
-        const rightEdge = popup!.getBoundingClientRect().width + popup!.offsetLeft;
-        const leftEdge = popup!.offsetLeft;
+        let popup = slide.querySelector(".popup") as HTMLDivElement;
+        const rect = popup.getBoundingClientRect();
+        const overlap = rect.width * 0.25;
+        const rightEdge = popup!.getBoundingClientRect().width + rect.left + overlap;
+        const leftEdge = rect.left - overlap;
         const screenWidth = document.body.clientWidth;
-        if (leftEdge < 0) {
-            popup.classList.add("left");
-            popup.classList.remove("right");
-        } else if (rightEdge > screenWidth) {
-            popup.classList.add("right");
-            popup.classList.remove("left");
-        } else {
-            popup.classList.remove("left", "right");
+        rightSlides.value.splice(rightSlides.value.indexOf(watchable.id), 1);
+        leftSlides.value.splice(leftSlides.value.indexOf(watchable.id), 1);
+        if (leftEdge < 0 && !leftSlides.value.includes(watchable.id)) {
+            leftSlides.value.push(watchable.id);
+        } else if (rightEdge > screenWidth && !rightSlides.value.includes(watchable.id)) {
+            rightSlides.value.push(watchable.id);
         }
+        nextTick(() => {
+            hoveredSlide.value = watchable.id;
+        });
     });
 }
 
@@ -87,49 +90,46 @@ function getWatchableRoute(watchable: Watchable & { progress: Progress[] }) {
                     <img class="logo" v-if="watchable.logo" :src="api.getImageUrl(watchable.logo.id)" :alt="watchable.name" />
                     <h3 class="fallback-name" v-else>{{ watchable.name }}</h3>
 
-                    <Transition name="pop">
-                        <div class="popup" v-if="hoveredSlide == watchable.id">
-                            <div
-                                class="image-or-trailer"
-                                :style="{
-                                    backgroundImage:
-                                        'url(' + (watchable.backdrop ? api.getImageUrl(watchable.backdrop.id) : WatchablePlaceholder) + ')',
-                                }"
+                    <div class="popup" :class="{ visible: hoveredSlide == watchable.id, left: leftSlides.includes(watchable.id) }">
+                        <div
+                            class="image-or-trailer"
+                            :style="{
+                                backgroundImage: 'url(' + (watchable.backdrop ? api.getImageUrl(watchable.backdrop.id) : WatchablePlaceholder) + ')',
+                            }"
+                        >
+                            <img class="logo" v-if="watchable.logo" :src="api.getImageUrl(watchable.logo.id)" alt="" />
+                            <h3 class="fallback-name" v-else>{{ watchable.name }}</h3>
+
+                            <Button
+                                class="info"
+                                @click.prevent="router.push({ name: watchable.type == 'show' ? 'Show' : 'Movie', params: { id: watchable.id } })"
                             >
-                                <img class="logo" v-if="watchable.logo" :src="api.getImageUrl(watchable.logo.id)" alt="" />
-                                <h3 class="fallback-name" v-else>{{ watchable.name }}</h3>
+                                <Icon icon="info"
+                            /></Button>
 
-                                <Button
-                                    class="info"
-                                    @click.prevent="router.push({ name: watchable.type == 'show' ? 'Show' : 'Movie', params: { id: watchable.id } })"
-                                >
-                                    <Icon icon="info"
-                                /></Button>
+                            <Transition name="fade" appear>
+                                <div class="trailer-wrapper" v-if="trailers[watchable.id] && hoveredSlide == watchable.id">
+                                    <iframe
+                                        class="trailer"
+                                        v-if="trailers[watchable.id] && trailerVisible == watchable.id"
+                                        width="100%"
+                                        height="100%"
+                                        :src="trailers[watchable.id]"
+                                        frameborder="0"
+                                        allow="autoplay;"
+                                    ></iframe>
+                                    <img
+                                        class="loading"
+                                        src="src/assets/images/spinner.svg"
+                                        alt="Loading..."
+                                        v-if="!noTrailerAvailable.includes(watchable.id)"
+                                    />
+                                </div>
+                            </Transition>
 
-                                <Transition name="fade" appear>
-                                    <div class="trailer-wrapper" v-if="trailers[watchable.id]">
-                                        <iframe
-                                            class="trailer"
-                                            v-if="trailers[watchable.id] && trailerVisible == watchable.id"
-                                            width="100%"
-                                            height="100%"
-                                            :src="trailers[watchable.id]"
-                                            frameborder="0"
-                                            allow="autoplay;"
-                                        ></iframe>
-                                        <img
-                                            class="loading"
-                                            src="src/assets/images/spinner.svg"
-                                            alt="Loading..."
-                                            v-if="!noTrailerAvailable.includes(watchable.id)"
-                                        />
-                                    </div>
-                                </Transition>
-
-                                <div class="video-overlay" v-if="trailers[watchable.id]"></div>
-                            </div>
+                            <div class="video-overlay" v-if="trailers[watchable.id]"></div>
                         </div>
-                    </Transition>
+                    </div>
                 </RouterLink>
 
                 <div class="progress" v-if="watchable.progress.length > 0">
@@ -149,25 +149,6 @@ function getWatchableRoute(watchable: Watchable & { progress: Progress[] }) {
 <style lang="scss" scoped>
 @import "src/styles/vars";
 @import "src/styles/mixins";
-
-.pop-leave-active,
-.pop-enter-active {
-    transition: transform 0.3s, opacity 0.3s;
-}
-
-.pop-leave-to,
-.pop-enter-from {
-    opacity: 0;
-    transform: scale(0.8) translateY(-10%);
-
-    &.left {
-        transform: scale(0.8) translateY(-10%) translateX(-10%);
-    }
-
-    &.right {
-        transform: scale(0.8) translateY(-10%) translateX(10%);
-    }
-}
 
 .fade-enter-active,
 .fade-leave-active {
@@ -232,21 +213,29 @@ function getWatchableRoute(watchable: Watchable & { progress: Progress[] }) {
                 }
 
                 .popup {
-                    z-index: 1;
-                    transition-delay: 0.2s;
+                    z-index: 2;
+                    transition: transform 0.3s, opacity 0.3s;
                     position: absolute;
                     top: -20px;
                     width: 150%;
                     border-radius: var(--border-radius);
                     overflow: hidden;
                     background-color: var(--background);
+                    transform: scale(0.666) translateY(-12%) translateX(0);
+                    opacity: 0;
 
-                    &.left {
-                        left: 0;
-                    }
+                    &.visible {
+                        transform: scale(1) translateY(-12%);
+                        opacity: 1;
+                        z-index: 10;
 
-                    &.right {
-                        right: 0;
+                        &.left {
+                            transform: scale(1) translateY(-12%) translateX(16%);
+                        }
+
+                        &.right {
+                            transform: scale(1) translateY(-12%) translateX(-16%);
+                        }
                     }
 
                     .image-or-trailer {
@@ -323,6 +312,10 @@ function getWatchableRoute(watchable: Watchable & { progress: Progress[] }) {
                             box-shadow: var(--image-glass);
                             display: flex;
                             padding: 10px;
+
+                            &:hover {
+                                background-color: var(--image-glass-border);
+                            }
                         }
                     }
 

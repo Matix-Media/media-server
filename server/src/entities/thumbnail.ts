@@ -7,6 +7,7 @@ import { MediaServer } from "..";
 import Image from "./image";
 import { randomUUID } from "crypto";
 import Stream from "./stream";
+import { TranscodeError } from "../lib/errors/transcodeError";
 
 @Entity()
 export default class Thumbnail extends BaseEntity {
@@ -43,61 +44,76 @@ export default class Thumbnail extends BaseEntity {
             await fs.rmdir(tempDirectory, { recursive: true });
         }
 
-        // Get duration of media
-        const duration = await new Promise<number>((resolve, reject) => {
-            ffprobe(filePath, (err, metadata) => {
-                if (err) reject(err);
-                if (!metadata.format.duration) reject(new Error("Unknown media duration"));
-                resolve(metadata.format.duration);
+        try {
+            // Get duration of media
+            const duration = await new Promise<number>((resolve, reject) => {
+                ffprobe(filePath, (err, metadata) => {
+                    if (err) reject(err);
+                    if (!metadata.format.duration) reject(new Error("Unknown media duration"));
+                    resolve(metadata.format.duration);
+                });
             });
-        });
-        const timestamps: number[] = [];
+            const timestamps: number[] = [];
 
-        for (let currentTimestamp = 0; currentTimestamp < duration; currentTimestamp += 10) {
-            timestamps.push(currentTimestamp);
-        }
+            for (let currentTimestamp = 0; currentTimestamp < duration; currentTimestamp += 10) {
+                timestamps.push(currentTimestamp);
+            }
 
-        return await new Promise<Thumbnail[]>((resolve, reject) => {
-            const command = ffmpeg(filePath, {});
-            command.on("end", async () => {
-                let filenames = await fs.readdir(tempDirectory);
-                filenames = filenames.sort();
-                filenames.shift();
-                const copyOperations = [];
-                for (const [i, filename] of filenames.sort().entries()) {
-                    copyOperations.push(
-                        (async () => {
-                            // Save image in database
-                            const image = await new Image().save();
-                            await fs.copyFile(path.join(tempDirectory, filename), await image.getLocation(server));
+            const thumbnails = await new Promise<Thumbnail[]>((resolve, reject) => {
+                try {
+                    const command = ffmpeg(filePath, {});
+                    command.on("end", async () => {
+                        let filenames = await fs.readdir(tempDirectory);
+                        filenames = filenames.sort();
+                        filenames.shift();
+                        const copyOperations = [];
+                        for (const [i, filename] of filenames.sort().entries()) {
+                            copyOperations.push(
+                                (async () => {
+                                    // Save image in database
+                                    const image = new Image();
+                                    image.type = "image/jpeg";
+                                    await image.save();
 
-                            // Save thumbnail information in database
-                            const thumbnail = new Thumbnail();
-                            thumbnail.from = i * every;
-                            thumbnail.to = (i + 1) * every - 1;
-                            thumbnail.image = image;
-                            await thumbnail.save();
-                            return thumbnail;
-                        })(),
-                    );
+                                    await fs.copyFile(path.join(tempDirectory, filename), await image.getLocation(server));
+
+                                    // Save thumbnail information in database
+                                    const thumbnail = new Thumbnail();
+                                    thumbnail.from = i * every;
+                                    thumbnail.to = (i + 1) * every - 1;
+                                    thumbnail.image = image;
+                                    await thumbnail.save();
+                                    return thumbnail;
+                                })(),
+                            );
+                        }
+                        const thumbnails = await Promise.all(copyOperations);
+                        await cleanup();
+                        server.mediaToolLogger.debug(`Successfully generated thumbnails for "${filePath}"`);
+                        server.mediaToolLogger.debug(`Saved in "${tempDirectory}"`);
+                        resolve(thumbnails);
+                    });
+                    command.on("error", async (error) => {
+                        await cleanup();
+                        reject(error);
+                    });
+                    command.on("progress", (progress) => {
+                        progressReport(progress.percent, progress.currentFps);
+                    });
+                    command.fps(1 / every);
+                    command.size("150x?");
+                    command.output(outputFilename);
+                    command.run();
+                } catch (err) {
+                    reject(err);
                 }
-                const thumbnails = await Promise.all(copyOperations);
+            });
+            return thumbnails;
+        } catch (err) {
+            try {
                 await cleanup();
-                server.mediaToolLogger.debug(`Successfully generated thumbnails for "${filePath}"`);
-                server.mediaToolLogger.debug(`Saved in "${tempDirectory}"`);
-                resolve(thumbnails);
-            });
-            command.on("error", async (error) => {
-                await cleanup();
-                reject(error);
-            });
-            command.on("progress", (progress) => {
-                progressReport(progress.percent, progress.currentFps);
-            });
-            command.fps(1 / every);
-            command.size("150x?");
-            command.output(outputFilename);
-            command.run();
-        });
+            } catch {}
+            throw new TranscodeError("Error generating thumbnails for media", err);
+        }
     }
 }

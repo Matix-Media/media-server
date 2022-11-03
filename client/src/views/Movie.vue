@@ -6,7 +6,8 @@ import Icon from "src/components/Icon.vue";
 import Progress from "src/components/Progress.vue";
 import Clickable from "src/components/Clickable.vue";
 import { ref } from "vue";
-import { publicDecrypt } from "crypto";
+import { useI18n } from "vue-i18n";
+import { useTitle } from "@vueuse/core";
 
 const route = useRoute();
 const router = useRouter();
@@ -19,6 +20,8 @@ const fullDescription = ref(false);
 const hours = ref(Math.floor(movie.movie_content!.stream.duration / 3600));
 const minutes = ref(Math.round((movie.movie_content!.stream.duration % 3600) / 60));
 if (movie.show_content) router.replace({ name: "Show", params: { id: route.params.id } });
+
+useTitle(movie.name, { titleTemplate: API.getTitleTemplate });
 </script>
 
 <template>

@@ -22,24 +22,31 @@ import chokidar from "chokidar";
 import IndexLog from "../entities/IndexLog";
 import file from "./utils/file";
 
+export interface IndexerConfig {
+    autoIndex: {
+        enabled: boolean;
+        directory: string;
+        removeAfterIndexing: boolean;
+    };
+    generateThumbnails: boolean;
+    qualityLevels: {
+        height: number;
+        bitrate: number;
+        crf: number;
+    }[];
+}
+
 export class Indexer {
     private server: MediaServer;
     private logger: Logger;
-    private autoIndexing: boolean;
-    private autoIndexingDirectory: string;
-    private removeAfterIndexing: boolean;
+    private config: IndexerConfig;
     private localAutoIndexCache: Record<string, NodeJS.Timeout> = {};
 
-    constructor(server: MediaServer, autoIndexing: boolean, autoIndexingDirectory?: string, removeAfterIndexing?: boolean) {
+    constructor(server: MediaServer, config: IndexerConfig) {
         this.server = server;
         this.logger = getLogger("indexer");
         this.logger.level = "debug";
-        this.autoIndexing = autoIndexing;
-        if (this.autoIndexing) {
-            assert(autoIndexingDirectory);
-            this.autoIndexingDirectory = autoIndexingDirectory;
-            this.removeAfterIndexing = removeAfterIndexing;
-        }
+        this.config = config;
     }
 
     private async triggerIndex(filePath: string) {
@@ -60,13 +67,14 @@ export class Indexer {
             indexLog.watchable = watchable;
             await indexLog.save();
 
-            if (this.removeAfterIndexing) {
+            if (this.config.autoIndex.removeAfterIndexing) {
                 this.logger.debug("Removing", filePath);
                 await fs.rm(filePath);
             }
         } catch (err) {
             this.logger.error(`Error indexing "${filePath}":`, err);
             indexLog.error = err.toString();
+            if ("stack" in err) indexLog.error += "\n\nStack:\n" + err.stack;
             indexLog.failed = true;
             indexLog.indexing = false;
             await indexLog.save();
@@ -83,16 +91,16 @@ export class Indexer {
     }
 
     public async autoIndex() {
-        if (!this.autoIndexing) return;
+        if (!this.config.autoIndex.enabled) return;
 
-        const watcher = chokidar.watch(this.autoIndexingDirectory, {
+        const watcher = chokidar.watch(this.config.autoIndex.directory, {
             persistent: false,
             usePolling: true,
             ignored: ["*.part", "*.!qB", "*.!qb", "*.!ut"],
         });
         await new Promise((resolve) => watcher.on("ready", resolve));
 
-        for (const currentFile of await file.getAllFilesRecursive(this.autoIndexingDirectory)) this.debounceIndex(path.resolve(currentFile));
+        for (const currentFile of await file.getAllFilesRecursive(this.config.autoIndex.directory)) this.debounceIndex(path.resolve(currentFile));
 
         watcher.on("raw", async (event, filename, stats) => {
             if (!["change", "rename"].includes(event)) return;
@@ -130,10 +138,13 @@ export class Indexer {
 
             // Generate target formats and thumbnails
             this.logger.debug("Generating source files...");
-            const stream = await Stream.fromMediaFile(this.server, filePath, (percentage) => progressReport("generatingStream", percentage));
-            stream.thumbnails = await Thumbnail.fromMediaFile(this.server, filePath, 10, (percentage) =>
-                progressReport("generatingThumbnails", percentage),
+            const stream = await Stream.fromMediaFile(this.server, filePath, this.config.qualityLevels, (percentage) =>
+                progressReport("generatingStream", percentage),
             );
+            if (this.config.generateThumbnails)
+                stream.thumbnails = await Thumbnail.fromMediaFile(this.server, filePath, 10, (percentage) =>
+                    progressReport("generatingThumbnails", percentage),
+                );
             await stream.save();
 
             progressReport("lookingUp", 0);
@@ -350,6 +361,7 @@ export class IndexError extends Error {
     public originalError?: Error;
 
     constructor(message: string, originalError?: Error) {
-        super(message);
+        super(message + (originalError ? ` (${originalError.message})` : ""));
+        if (originalError) this.originalError = originalError;
     }
 }

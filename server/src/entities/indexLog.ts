@@ -16,10 +16,10 @@ export default class IndexLog extends BaseEntity {
     @Column()
     indexing: boolean;
 
-    @Column()
+    @Column({ default: false })
     failed: boolean;
 
-    @Column({ type: "text" })
+    @Column({ type: "text", nullable: true })
     error?: string;
 
     @CreateDateColumn()
