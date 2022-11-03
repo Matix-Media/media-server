@@ -20,6 +20,14 @@ Run the following command inside the directory to install all dependencies
 $ yarn
 ```
 
+After that, simply run
+
+```bash
+$ yarn build
+```
+
+to build the project.
+
 ## Running
 
 Simply run to start the media server

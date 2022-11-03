@@ -25,7 +25,7 @@ import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import ContentRating from "./entities/contentRating";
 import { Static, Type } from "@sinclair/typebox";
 import Ajv from "ajv";
-import IndexLog from "./entities/IndexLog";
+import IndexLog from "./entities/indexLog";
 import { readFileSync } from "fs";
 
 declare module "fastify" {

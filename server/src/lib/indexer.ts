@@ -19,7 +19,7 @@ import CastMember from "../entities/castMember";
 import array from "./utils/array";
 import { assert } from "console";
 import chokidar from "chokidar";
-import IndexLog from "../entities/IndexLog";
+import IndexLog from "../entities/indexLog";
 import file from "./utils/file";
 
 export interface IndexerConfig {
