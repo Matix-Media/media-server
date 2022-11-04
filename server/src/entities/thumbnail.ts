@@ -61,7 +61,8 @@ export default class Thumbnail extends BaseEntity {
 
             const thumbnails = await new Promise<Thumbnail[]>((resolve, reject) => {
                 try {
-                    const command = ffmpeg(filePath, {});
+                    // niceness: Limit cpu usage (to prevent freezing of pc)
+                    const command = ffmpeg(filePath, { niceness: 10 });
                     command.on("end", async () => {
                         let filenames = await fs.readdir(tempDirectory);
                         filenames = filenames.sort();
@@ -100,6 +101,14 @@ export default class Thumbnail extends BaseEntity {
                     command.on("progress", (progress) => {
                         progressReport(progress.percent, progress.currentFps);
                     });
+
+                    // If more than one core available, leave one unused, to prevent freezing of pc
+                    const availableCpus = os.cpus();
+                    if (availableCpus.length > 1) {
+                        server.mediaToolLogger.debug("Limiting threads to " + (availableCpus.length - 1) + "/" + availableCpus.length);
+                        command.addOption("-threads " + availableCpus.length);
+                    }
+
                     command.fps(1 / every);
                     command.size("150x?");
                     command.output(outputFilename);
