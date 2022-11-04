@@ -72,7 +72,7 @@ export class Indexer {
             }
         } catch (err) {
             this.logger.error(`Error indexing "${filePath}":`, err);
-            indexLog.error = "Time:" + new Date().toISOString() + "\n" + err.toString();
+            indexLog.error = "Time: " + new Date().toISOString() + "\n" + err.toString();
             if ("stack" in err) indexLog.error += "\n\nStack:\n" + err.stack;
             indexLog.failed = true;
             indexLog.indexing = false;
