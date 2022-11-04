@@ -149,7 +149,6 @@ function navigate(watchable: Watchable & { progress: Progress[] }, watch: boolea
     .sliders {
         z-index: 1;
         margin-top: -125px;
-        padding: 0 var(--side-padding);
         display: flex;
         flex-direction: column;
         gap: 35px;
