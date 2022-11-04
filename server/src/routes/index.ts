@@ -18,7 +18,10 @@ export default function (fastify: FastifyInstance, options: RegisterOptions, don
 
     const frontEndAppDir = path.resolve(path.join("../client/dist"));
     fastify.mediaServer.server.logger.debug("Front end app files located in:", frontEndAppDir);
-    fastify.register(fastifyStatic, { root: frontEndAppDir });
+    fastify.register(fastifyStatic, { root: frontEndAppDir, wildcard: false });
+    fastify.get("*", async (req, res) => {
+        return res.sendFile(path.join(frontEndAppDir, "index.html"));
+    });
 
     done();
 }
