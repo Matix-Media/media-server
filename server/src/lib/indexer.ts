@@ -17,7 +17,6 @@ import path from "path";
 import ContentRating from "../entities/contentRating";
 import CastMember from "../entities/castMember";
 import array from "./utils/array";
-import { assert } from "console";
 import chokidar from "chokidar";
 import IndexLog from "../entities/indexLog";
 import file from "./utils/file";
@@ -137,15 +136,25 @@ export class Indexer {
             if (probe.streams.length > 0) watchable.quality = probe.streams[0].width + "x" + probe.streams[0].height;
 
             // Generate target formats and thumbnails
-            this.logger.debug("Generating source files...");
-            const stream = await Stream.fromMediaFile(this.server, filePath, this.config.qualityLevels, (percentage) =>
-                progressReport("generatingStream", percentage),
-            );
-            if (this.config.generateThumbnails)
-                stream.thumbnails = await Thumbnail.fromMediaFile(this.server, filePath, 10, (percentage) =>
-                    progressReport("generatingThumbnails", percentage),
+            let stream: Stream;
+            try {
+                this.logger.debug("Generating source files...");
+                stream = await Stream.fromMediaFile(this.server, filePath, this.config.qualityLevels, (percentage) =>
+                    progressReport("generatingStream", percentage),
                 );
-            await stream.save();
+            } catch (err) {
+                throw new IndexError("Error generating stream", err);
+            }
+
+            try {
+                if (this.config.generateThumbnails)
+                    stream.thumbnails = await Thumbnail.fromMediaFile(this.server, filePath, 10, (percentage) =>
+                        progressReport("generatingThumbnails", percentage),
+                    );
+                await stream.save();
+            } catch (err) {
+                throw new IndexError("Error generating thumbnails", err);
+            }
 
             progressReport("lookingUp", 0);
 
