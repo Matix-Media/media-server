@@ -60,7 +60,8 @@ export default class Stream extends BaseEntity {
 
             await new Promise<void>((resolve, reject) => {
                 try {
-                    const command = ffmpeg(filePath);
+                    // niceness: Limit cpu usage (to prevent freezing of pc)
+                    const command = ffmpeg(filePath, { niceness: 10 });
 
                     command.on("end", async () => {
                         resolve();
@@ -79,8 +80,14 @@ export default class Stream extends BaseEntity {
 
                     server.mediaToolLogger.debug("Video streams: " + inputVideoStreams.length + ", Audio streams: " + inputAudioStreams.length);
 
+                    // If more than one core available, leave one unused, to prevent freezing of pc
+                    const availableCpus = os.cpus();
+                    if (availableCpus.length > 1) {
+                        server.mediaToolLogger.debug("Limiting threads to " + (availableCpus.length - 1) + "/" + availableCpus.length);
+                        command.addOption("-threads " + availableCpus.length);
+                    }
+
                     // Codec
-                    //command.addOption("-c:v libx264");
                     command.addOption("-c:a libmp3lame");
 
                     // Duplicate streams for different quality levels
