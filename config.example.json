@@ -14,6 +14,9 @@
     "//": "The port of the web-server",
     "port": 3000,
 
+    "//": "The host of the server",
+    "host": "127.0.0.1",
+
     "//": "Path to ffmpeg",
     "ffmpeg": "./ffmpeg",
 

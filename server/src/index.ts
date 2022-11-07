@@ -44,6 +44,7 @@ const MediaServerConfig = Type.Object({
     }),
     saveDirectory: Type.String(),
     port: Type.Number(),
+    host: Type.String(),
     ffmpeg: Type.Optional(Type.String()),
     tmdb: Type.Object({
         apiKey: Type.String(),
@@ -82,6 +83,7 @@ export class MediaServer {
 
     private saveDirectory: string;
     private port: number;
+    private host: string;
 
     constructor(config: Static<typeof MediaServerConfig>) {
         this.logger = getLogger("mediaserver");
@@ -137,6 +139,7 @@ export class MediaServer {
         });
 
         this.port = config.port;
+        this.host = config.host;
         this.webServer = Fastify();
         this.webServer.withTypeProvider<TypeBoxTypeProvider>();
         this.webServer.decorate("mediaServer", { server: this });
@@ -146,7 +149,7 @@ export class MediaServer {
     public async boot() {
         this.logger.debug("Booting media server...");
         await this.dataSource.initialize();
-        const addr = await this.webServer.listen({ port: this.port });
+        const addr = await this.webServer.listen({ port: this.port, host: this.host });
         this.indexer.autoIndex();
         this.logger.debug("Media server booted successfully, reachable through " + addr);
     }
