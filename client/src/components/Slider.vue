@@ -326,13 +326,18 @@ onMounted(() => {
                 position: relative;
                 background-size: cover;
                 background-position: center;
-                aspect-ratio: 16 / 9;
                 border-radius: var(--border-radius);
                 box-shadow: var(--image-glass);
+                aspect-ratio: 16 / 9;
 
                 display: flex;
                 align-items: center;
                 justify-content: center;
+
+                @supports not (aspect-ratio: 16 /9) {
+                    padding-bottom: 56.25%;
+                }
+
                 .logo {
                     max-width: 70%;
                     max-height: 70%;
