@@ -22,7 +22,7 @@ const progressWrapper = ref<HTMLDivElement>();
 const progressBar = ref<HTMLDivElement>();
 const volumeSlider = ref<HTMLDivElement>();
 const isSupported = ref(Hls.isSupported());
-const hls = new Hls({ debug: false });
+let hls: Hls;
 const api = API.getInstance();
 const streamInfo = await api.getStream(props.streamId);
 let progressReportInterval: number;
@@ -96,14 +96,29 @@ onMounted(async () => {
         }
     };
 
-    hls.loadSource(api.getStreamPartUrl(streamInfo.first_part.id, true, false));
-    //if (streamInfo.first_part.has_subtitles) hls.loadSource(api.getStreamPartUrl(streamInfo.first_part.id, true, true));
-    hls.attachMedia(video.value);
+    // Check if browser nativly supports HLS
+    if (video.value.canPlayType("application/vnd.apple.mpegURL") || video.value.canPlayType("audio/mpegurl")) {
+        const sourceElem = document.createElement("source");
+        sourceElem.setAttribute("src", api.getStreamPartUrl(streamInfo.first_part.id, true, false));
+        sourceElem.setAttribute("type", "application/vnd.apple.mpegURL");
+        video.value.appendChild(sourceElem);
 
-    hls.on(Hls.Events.MANIFEST_LOADED, (_event, data) => {});
+        const audioSourceElem = document.createElement("source");
+        audioSourceElem.setAttribute("src", api.getStreamPartUrl(streamInfo.first_part.id, true, false));
+        audioSourceElem.setAttribute("type", "audio/mpegurl");
+        video.value.appendChild(audioSourceElem);
+    } else {
+        hls = new Hls({ debug: false });
 
-    if (route.query.fullscreen) {
-        toggleFullscreen();
+        hls.loadSource(api.getStreamPartUrl(streamInfo.first_part.id, true, false));
+        //if (streamInfo.first_part.has_subtitles) hls.loadSource(api.getStreamPartUrl(streamInfo.first_part.id, true, true));
+        hls.attachMedia(video.value);
+
+        hls.on(Hls.Events.MANIFEST_LOADED, (_event, data) => {});
+
+        if (route.query.fullscreen) {
+            toggleFullscreen();
+        }
     }
 });
 
