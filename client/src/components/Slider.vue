@@ -173,6 +173,7 @@ onMounted(() => {
                             }"
                             @mouseenter="(event: MouseEvent) => onSlideHoverEnter(watchable)"
                             @mouseleave="(event: MouseEvent) => onSlideHoverLeave(watchable)"
+                            @click="router.push(getWatchableRoute(watchable))"
                         >
                             <div
                                 class="image-or-trailer"

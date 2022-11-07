@@ -98,6 +98,7 @@ onMounted(async () => {
 
     // Check if browser nativly supports HLS
     if (video.value.canPlayType("application/vnd.apple.mpegURL") || video.value.canPlayType("audio/mpegurl")) {
+        console.log("Playing using native browser HLS support");
         const sourceElem = document.createElement("source");
         sourceElem.setAttribute("src", api.getStreamPartUrl(streamInfo.first_part.id, true, false));
         sourceElem.setAttribute("type", "application/vnd.apple.mpegURL");
@@ -108,6 +109,7 @@ onMounted(async () => {
         audioSourceElem.setAttribute("type", "audio/mpegurl");
         video.value.appendChild(audioSourceElem);
     } else {
+        console.log("Playing using HLS.js polyfill");
         hls = new Hls({ debug: false });
 
         hls.loadSource(api.getStreamPartUrl(streamInfo.first_part.id, true, false));
