@@ -61,7 +61,9 @@ export class Indexer {
         await indexLog.save();
 
         try {
-            const watchable = await this.indexFile(filePath);
+            const watchable = await this.indexFile(filePath, (action, percentage) => {
+                this.logger.debug(`[Index-Progress] ${action}: ${percentage.toFixed(2)}`);
+            });
             indexLog.indexing = false;
             indexLog.watchable = watchable;
             await indexLog.save();
