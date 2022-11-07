@@ -80,6 +80,9 @@ onMounted(async () => {
             if (!playing.value) return;
             api.reportStreamProgress(streamInfo.id, elapsed.value, duration.value - elapsed.value < 10);
         }, 10000) as any as number;
+
+        // Get audio tracks
+        console.log(video.value.audioTracks);
     };
 
     window.onkeyup = (event) => {
