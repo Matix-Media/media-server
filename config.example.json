@@ -20,6 +20,9 @@
     "//": "Path to ffmpeg",
     "ffmpeg": "./ffmpeg",
 
+    "//": "If hardware acceleration should be used",
+    "hardwareAcceleration": false,
+
     "//": "TMDB (themoviedb) is required for fetching information about media",
     "tmdb": {
         "//": "The api key for TMDB",

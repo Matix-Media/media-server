@@ -111,6 +111,9 @@ export default class Thumbnail extends BaseEntity {
 
                     command.fps(1 / every);
                     command.size("150x?");
+
+                    if (server.hardwareAcceleration) command.addInputOption("-hwaccel auto");
+
                     command.output(outputFilename);
                     command.run();
                 } catch (err) {

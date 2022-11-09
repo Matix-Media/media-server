@@ -142,6 +142,8 @@ export default class Stream extends BaseEntity {
                     command.addOption(`-master_pl_name`, "master.m3u8");
                     command.addOption("-hls_list_size 0");
 
+                    if (server.hardwareAcceleration) command.addInputOption("-hwaccel auto");
+
                     // Output file
                     command.output(outputFilename);
 

@@ -46,6 +46,7 @@ const MediaServerConfig = Type.Object({
     port: Type.Number(),
     host: Type.String(),
     ffmpeg: Type.Optional(Type.String()),
+    hardwareAcceleration: Type.Boolean(),
     tmdb: Type.Object({
         apiKey: Type.String(),
     }),
@@ -80,6 +81,7 @@ export class MediaServer {
     public logger: Logger;
     public mediaToolLogger: Logger;
     public webServer: FastifyInstanceType;
+    public hardwareAcceleration: boolean;
 
     private saveDirectory: string;
     private port: number;
@@ -110,6 +112,8 @@ export class MediaServer {
             Ffmpeg.setFfmpegPath(path.join(config.ffmpeg, "ffmpeg.exe"));
             Ffmpeg.setFfprobePath(path.join(config.ffmpeg, "ffprobe.exe"));
         }
+
+        this.hardwareAcceleration = config.hardwareAcceleration;
 
         this.dataSource = new DataSource({
             type: "mysql",
