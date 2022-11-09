@@ -43,6 +43,8 @@ export default class Stream extends BaseEntity {
         const outputFilename = path.join(tempDirectory, "output-%v.m3u8");
         await fs.mkdir(tempDirectory, { recursive: true });
 
+        server.mediaToolLogger.debug(`Temporarily saving to "${tempDirectory}"`);
+
         async function cleanup() {
             await fs.rmdir(tempDirectory, { recursive: true });
         }
