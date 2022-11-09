@@ -141,9 +141,13 @@ export class Indexer {
             let stream: Stream;
             try {
                 this.logger.debug("Generating source files...");
-                stream = await Stream.fromMediaFile(this.server, filePath, this.config.qualityLevels, (percentage) =>
-                    progressReport("generatingStream", percentage),
-                );
+                stream = await Stream.fromMediaFile(this.server, filePath, this.config.qualityLevels, (percentage) => {
+                    if (percentage < 100) {
+                        progressReport("generatingStream", percentage);
+                    } else {
+                        progressReport("importingPlaylist", 0);
+                    }
+                });
             } catch (err) {
                 throw new IndexError("Error generating stream", err);
             }
