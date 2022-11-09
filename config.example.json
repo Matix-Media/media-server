@@ -20,7 +20,7 @@
     "//": "Path to ffmpeg",
     "ffmpeg": "./ffmpeg",
 
-    "//": "If hardware acceleration should be used",
+    "//": "If hardware acceleration should be used (GPU in addition to only CPU)",
     "hardwareAcceleration": false,
 
     "//": "TMDB (themoviedb) is required for fetching information about media",
