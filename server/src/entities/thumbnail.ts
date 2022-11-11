@@ -41,7 +41,7 @@ export default class Thumbnail extends BaseEntity {
         await fs.mkdir(tempDirectory, { recursive: true });
 
         async function cleanup() {
-            await fs.rmdir(tempDirectory, { recursive: true });
+            await fs.rm(tempDirectory, { recursive: true });
         }
 
         try {

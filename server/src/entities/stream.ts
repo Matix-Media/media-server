@@ -46,7 +46,7 @@ export default class Stream extends BaseEntity {
         server.mediaToolLogger.debug(`Temporarily saving to "${tempDirectory}"`);
 
         async function cleanup() {
-            await fs.rmdir(tempDirectory, { recursive: true });
+            await fs.rm(tempDirectory, { recursive: true });
         }
 
         try {
