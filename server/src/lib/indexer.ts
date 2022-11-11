@@ -344,7 +344,7 @@ export class Indexer {
                     watchable.year = new Date(result.first_air_date).getFullYear();
                     watchable.genres = await Promise.all(showInfos.genres.map((tmdbGenre) => Genre.getOrCreate(tmdbGenre.id, tmdbGenre.name)));
                     watchable.content_ratings = await Promise.all(
-                        showInfos.content_ratings.result.map((rating) => ContentRating.getOrCreate(rating.iso_3166_1, rating.name)),
+                        showInfos.content_ratings.results.map((rating) => ContentRating.getOrCreate(rating.iso_3166_1, rating.name)),
                     );
                     watchable.directors = await Promise.all(
                         showInfos.credits.crew
