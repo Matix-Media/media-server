@@ -165,9 +165,11 @@ export interface ShowResult {
     vote_average: number;
     vote_count: number;
     content_ratings: {
-        iso_3166_1: string;
-        name: string;
-    }[];
+        result: {
+            iso_3166_1: string;
+            name: string;
+        }[];
+    };
     credits: {
         cast: CastMember[];
         crew: CrewMember[];
