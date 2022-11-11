@@ -167,7 +167,7 @@ export interface ShowResult {
     content_ratings: {
         results: {
             iso_3166_1: string;
-            name: string;
+            rating: string;
         }[];
     };
     credits: {
