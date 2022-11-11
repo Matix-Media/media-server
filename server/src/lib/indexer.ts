@@ -20,6 +20,7 @@ import array from "./utils/array";
 import chokidar from "chokidar";
 import IndexLog from "../entities/indexLog";
 import file from "./utils/file";
+import { randomUUID } from "crypto";
 
 export interface IndexerConfig {
     autoIndex: {
@@ -35,11 +36,20 @@ export interface IndexerConfig {
     }[];
 }
 
+export interface QueueItem {
+    id: string;
+    filePath: string;
+    action: string;
+    percentage: number;
+    running: boolean;
+}
+
 export class Indexer {
     private server: MediaServer;
     private logger: Logger;
     private config: IndexerConfig;
     private localAutoIndexCache: Record<string, NodeJS.Timeout> = {};
+    public indexQueue: QueueItem[] = [];
 
     constructor(server: MediaServer, config: IndexerConfig) {
         this.server = server;
@@ -48,12 +58,26 @@ export class Indexer {
         this.config = config;
     }
 
-    private async triggerIndex(filePath: string) {
+    private async triggerIndex(filePath: string, queueItem?: QueueItem) {
+        if (!queueItem) {
+            queueItem = {
+                id: randomUUID(),
+                filePath,
+                action: "",
+                percentage: 0,
+                running: false,
+            };
+            this.indexQueue.push(queueItem);
+        }
+
+        if (this.indexQueue.find((i) => i.running)) return;
+
         let indexLog = await IndexLog.findOneBy({ filepath: filePath });
         if (indexLog) {
             this.logger.debug(filePath, "already indexed, skipping");
             return;
         }
+
         this.logger.debug(filePath, "picked up, indexing");
         indexLog = new IndexLog();
         indexLog.filepath = filePath;
@@ -63,6 +87,8 @@ export class Indexer {
         try {
             const watchable = await this.indexFile(filePath, (action, percentage) => {
                 this.logger.debug(`[Index-Progress] ${action}: ${percentage.toFixed(2)}`);
+                queueItem.action = action;
+                queueItem.percentage = percentage;
             });
             indexLog.indexing = false;
             indexLog.watchable = watchable;
@@ -80,6 +106,10 @@ export class Indexer {
             indexLog.indexing = false;
             await indexLog.save();
         }
+        const queueIndex = this.indexQueue.findIndex((item) => item.id == queueItem.id);
+        this.indexQueue.splice(queueIndex, 1);
+
+        if (this.indexQueue.length > 0) this.triggerIndex(this.indexQueue[0].filePath, this.indexQueue[0]);
     }
 
     private async debounceIndex(filePath: string) {
