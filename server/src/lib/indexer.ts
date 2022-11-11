@@ -58,6 +58,22 @@ export class Indexer {
         this.config = config;
     }
 
+    private removeFromQueue(queueItem: QueueItem) {
+        const queueIndex = this.indexQueue.findIndex((item) => item.id == queueItem.id);
+        this.indexQueue.splice(queueIndex, 1);
+    }
+
+    private isQueueRunning() {
+        return !!this.indexQueue.find((i) => i.running);
+    }
+
+    private executeNextInQueue() {
+        if (this.indexQueue.length > 0) {
+            this.logger.debug("Executing next queue item");
+            this.triggerIndex(this.indexQueue[0].filePath, this.indexQueue[0]);
+        }
+    }
+
     private async triggerIndex(filePath: string, queueItem?: QueueItem) {
         if (!queueItem) {
             queueItem = {
@@ -70,15 +86,15 @@ export class Indexer {
             this.indexQueue.push(queueItem);
         }
 
-        if (this.indexQueue.find((i) => i.running)) return;
+        if (this.isQueueRunning()) return;
 
         queueItem.running = true;
 
         let indexLog = await IndexLog.findOneBy({ filepath: filePath });
         if (indexLog) {
+            this.removeFromQueue(queueItem);
             this.logger.debug(filePath, "already indexed, skipping");
-            this.logger.debug("Moving on to next item in queue, if available");
-            if (this.indexQueue.length > 0) this.triggerIndex(this.indexQueue[0].filePath, this.indexQueue[0]);
+            this.executeNextInQueue();
             return;
         }
 
@@ -110,10 +126,9 @@ export class Indexer {
             indexLog.indexing = false;
             await indexLog.save();
         }
-        const queueIndex = this.indexQueue.findIndex((item) => item.id == queueItem.id);
-        this.indexQueue.splice(queueIndex, 1);
 
-        if (this.indexQueue.length > 0) this.triggerIndex(this.indexQueue[0].filePath, this.indexQueue[0]);
+        this.removeFromQueue(queueItem);
+        this.executeNextInQueue();
     }
 
     private async debounceIndex(filePath: string) {
