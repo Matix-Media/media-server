@@ -77,6 +77,7 @@ export class Indexer {
         let indexLog = await IndexLog.findOneBy({ filepath: filePath });
         if (indexLog) {
             this.logger.debug(filePath, "already indexed, skipping");
+            this.logger.debug("Moving on to next item in queue, if available");
             if (this.indexQueue.length > 0) this.triggerIndex(this.indexQueue[0].filePath, this.indexQueue[0]);
             return;
         }
