@@ -72,6 +72,8 @@ export class Indexer {
 
         if (this.indexQueue.find((i) => i.running)) return;
 
+        queueItem.running = true;
+
         let indexLog = await IndexLog.findOneBy({ filepath: filePath });
         if (indexLog) {
             this.logger.debug(filePath, "already indexed, skipping");
