@@ -165,7 +165,7 @@ export interface ShowResult {
     vote_average: number;
     vote_count: number;
     content_ratings: {
-        result: {
+        results: {
             iso_3166_1: string;
             name: string;
         }[];
