@@ -117,7 +117,7 @@ export interface Season {
 export interface Episode {
     id: string;
     name: string;
-    episode_number: string;
+    episode_number: number;
     description: string;
     poster: APIImage;
     duration: number;
