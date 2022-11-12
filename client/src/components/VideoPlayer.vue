@@ -193,8 +193,8 @@ async function toggleFullscreen() {
 }
 
 function back() {
-    if (router.options.history.state.back) router.back();
-    else router.push({ name: props.back });
+    //if (router.options.history.state.back) router.back();
+    router.push({ name: props.back });
 }
 
 function seek(event: MouseEvent) {
