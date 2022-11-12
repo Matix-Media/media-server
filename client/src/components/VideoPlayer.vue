@@ -66,6 +66,9 @@ onMounted(async () => {
         if (duration.value - elapsed.value < 10) {
             api.reportStreamProgress(streamInfo.id, duration.value, true);
         }
+        if (duration.value - elapsed.value <= 0) {
+            next();
+        }
         if (hasMediaSession && props.showControls) {
             navigator.mediaSession.setPositionState({ duration: duration.value, position: elapsed.value, playbackRate: 1 });
         }

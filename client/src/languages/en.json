@@ -52,6 +52,7 @@
     "watch": {
         "title": "Watch {title}",
         "season": "Season",
-        "episode": "Episode"
+        "episode": "Episode",
+        "nextEpisode": "Next Episode"
     }
 }
