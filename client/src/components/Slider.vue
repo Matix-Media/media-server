@@ -160,7 +160,7 @@ onMounted(() => {
                     :to="getWatchableRoute(watchable)"
                 >
                     <img class="logo" v-if="watchable.logo" :src="api.getImageUrl(watchable.logo.id)" :alt="watchable.name" />
-                    <h3 class="fallback-name" v-else>{{ watchable.name }}</h3>
+                    <h3 class="fallback-logo" v-else>{{ watchable.name }}</h3>
 
                     <Teleport to="body">
                         <div
@@ -183,7 +183,7 @@ onMounted(() => {
                                 }"
                             >
                                 <img class="logo" v-if="watchable.logo" :src="api.getImageUrl(watchable.logo.id)" alt="" />
-                                <h3 class="fallback-name" v-else>{{ watchable.name }}</h3>
+                                <h3 class="fallback-logo" v-else>{{ watchable.name }}</h3>
 
                                 <Button
                                     class="info"
@@ -329,6 +329,8 @@ onMounted(() => {
                 border-radius: var(--border-radius);
                 box-shadow: var(--image-glass);
                 aspect-ratio: 16 / 9;
+                width: 100%;
+                text-decoration: none;
 
                 display: flex;
                 align-items: center;
@@ -341,6 +343,12 @@ onMounted(() => {
                 .logo {
                     max-width: 70%;
                     max-height: 70%;
+                }
+
+                .fallback-logo {
+                    color: var(--white);
+                    font-size: 36px;
+                    text-shadow: 0px 4px 3px rgb(0 0 0 / 40%), 0px 8px 13px rgb(0 0 0 / 10%), 0px 18px 23px rgb(0 0 0 / 10%);
                 }
             }
         }
@@ -467,12 +475,14 @@ onMounted(() => {
             z-index: 1;
         }
 
-        .fallback-name {
+        .fallback-logo {
             align-self: flex-end;
             justify-self: end;
             max-width: 40%;
             margin: 0 0 20px 20px;
             z-index: 1;
+            color: var(--white);
+            font-size: 24px;
         }
 
         .info {
