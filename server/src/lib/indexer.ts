@@ -32,6 +32,7 @@ export interface IndexerConfig {
     qualityLevels: {
         height: number;
         bitrate: number;
+        audioBitrate: number;
         crf: number;
     }[];
 }

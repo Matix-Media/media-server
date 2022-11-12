@@ -10,10 +10,10 @@ import ffmpeg, { ffprobe, FfprobeData } from "fluent-ffmpeg";
 import Progress from "./progress";
 import { TranscodeError } from "../lib/errors/transcodeError";
 
-const fallbackQualityLevels: { height: number; bitrate: number; crf: number }[] = [
-    { height: 480, bitrate: 1500, crf: 30 },
-    { height: 720, bitrate: 3000, crf: 25 },
-    { height: 1080, bitrate: 4500, crf: 23 },
+const fallbackQualityLevels: { height: number; bitrate: number; audioBitrate: number; crf: number }[] = [
+    { height: 480, bitrate: 1500, audioBitrate: 1000, crf: 30 },
+    { height: 720, bitrate: 3000, audioBitrate: 2000, crf: 25 },
+    { height: 1080, bitrate: 4500, audioBitrate: 4000, crf: 23 },
 ];
 
 @Entity()
@@ -59,6 +59,7 @@ export default class Stream extends BaseEntity {
             });
             const inputVideoStreams = inputInfo.streams.filter((stream) => stream.codec_type == "video");
             const inputAudioStreams = inputInfo.streams.filter((stream) => stream.codec_type == "audio");
+            const inputSubtitleStreams = inputInfo.streams.filter((stream) => stream.codec_type == "subtitle");
 
             await new Promise<void>((resolve, reject) => {
                 try {
@@ -80,17 +81,17 @@ export default class Stream extends BaseEntity {
                         progressReport(progress.percent, progress.currentFps);
                     });
 
-                    server.mediaToolLogger.debug("Video streams: " + inputVideoStreams.length + ", Audio streams: " + inputAudioStreams.length);
-
-                    // If more than one core available, leave one unused, to prevent freezing of pc
-                    const availableCpus = os.cpus();
-                    if (availableCpus.length > 1) {
-                        server.mediaToolLogger.debug("Limiting threads to " + (availableCpus.length - 1) + "/" + availableCpus.length);
-                        command.addOption("-threads " + availableCpus.length);
-                    }
+                    server.mediaToolLogger.debug(
+                        "Video streams: " +
+                            inputVideoStreams.length +
+                            ", Audio streams: " +
+                            inputAudioStreams.length +
+                            ", Subtitle streams: " +
+                            inputAudioStreams.length,
+                    );
 
                     // Codec
-                    command.addOption("-c:a libmp3lame");
+                    //command.addOption("-c:a libmp3lame");
 
                     // Duplicate streams for different quality levels
                     for (let i = 0; i < qualityLevels.length; i++) {
@@ -98,53 +99,88 @@ export default class Stream extends BaseEntity {
                         for (let i2 = 0; i2 < inputAudioStreams.length; i2++) command.addOption(`-map 0:a:${i2}`);
                     }
 
+                    for (let i = 0; i < inputSubtitleStreams.length; i++) command.addOption(`-map 0:s:${i}`);
+
                     // Adjust streams for quality levels
+                    server.mediaToolLogger.debug("Adjusting streams for quality levels");
                     for (const [i, qualityLevel] of qualityLevels.entries()) {
                         for (let i1 = 0; i1 < inputVideoStreams.length; i1++) {
                             const videoStreamInfo = inputVideoStreams[i1];
                             const videoStream = i * inputVideoStreams.length + i1;
+
                             if (videoStreamInfo.codec_name != "h264") {
                                 command.addOption(`-c:v:${i1} libx264`);
                                 server.mediaToolLogger.debug(
-                                    `[x${qualityLevel.height}] Transcoding video stream ${i1} (source codec: ${videoStreamInfo.codec_name})`,
+                                    `[x${qualityLevel.height}] Transcoding video stream ${i1}:${videoStream} (source codec: ${videoStreamInfo.codec_name})`,
                                 );
                             }
                             if (videoStreamInfo.height > qualityLevel.height) {
                                 command.addOption(`-filter:v:${videoStream} scale=-2:${qualityLevel.height}`);
                                 server.mediaToolLogger.debug(
-                                    `[x${qualityLevel.height}] Scaling down video (source height: ${videoStreamInfo.height})`,
+                                    `[x${qualityLevel.height}] Scaling down video stream ${i1}:${videoStream} (source height: ${videoStreamInfo.height})`,
                                 );
                             }
-                            command.addOption(`-maxrate:v:${videoStream} ${qualityLevel.bitrate}`);
+
+                            command.addOption(`-b:v:${videoStream} ${qualityLevel.bitrate}`);
                             command.addOption(`-crf:v:${videoStream} ${qualityLevel.crf}`);
+                        }
+
+                        for (let i2 = 0; i2 < inputAudioStreams.length; i2++) {
+                            const audioStreamInfo = inputAudioStreams[i2];
+                            const audioStream = i * inputAudioStreams.length + i2;
+
+                            if (audioStreamInfo.codec_name != "mp3lame") {
+                                command.addOption(`-c:a:${i2} libmp3lame`);
+                                server.mediaToolLogger.debug(
+                                    `[x${qualityLevel.height}] Transcoding audio stream ${i2}:${audioStream} (source codec: ${audioStreamInfo.codec_name})`,
+                                );
+                            }
+
+                            command.addOption(`-b:a:${audioStream} ${qualityLevel.audioBitrate}`);
                         }
                     }
 
                     // Generate stream map
-                    let streamMap = "";
+                    let streamMaps: string[] = [];
+                    //let subtitleStreamMap = "";
+                    //for (let i = 0; i < inputSubtitleStreams.length; i++) subtitleStreamMap += `s:${i},`;
+                    //streamMaps.push(subtitleStreamMap + "sgroup:subtitles");
+
+                    //let audioStreamMap = "";
+                    //for (let i = 0; i < inputAudioStreams.length; i++) audioStreamMap += `a:${i},`;
+                    //streamMaps.push(audioStreamMap + "agroup:audio,name:audio");
+
                     for (const [i, qualityLevel] of qualityLevels.entries()) {
-                        for (let i1 = 0; i1 < inputVideoStreams.length; i1++) {
-                            const videoStream = i * inputVideoStreams.length + i1;
-                            streamMap += `v:${videoStream},`;
-                        }
-                        for (let i2 = 0; i2 < inputAudioStreams.length; i2++) {
-                            const audioStream = i * inputAudioStreams.length + i2;
-                            streamMap += `a:${audioStream},`;
-                        }
-                        streamMap += `name:${qualityLevel.height}p `;
+                        let qualityAudioLevelStreamMap = "";
+                        for (let i2 = 0; i2 < inputAudioStreams.length; i2++) qualityAudioLevelStreamMap += `a:${i * inputAudioStreams.length + i2},`;
+                        streamMaps.push(qualityAudioLevelStreamMap + `agroup:audio_${qualityLevel.height},name:audio_${qualityLevel.height}p`);
+
+                        let qualityVideoLevelStreamMap = "";
+                        for (let i1 = 0; i1 < inputVideoStreams.length; i1++) qualityVideoLevelStreamMap += `v:${i * inputVideoStreams.length + i1},`;
+                        streamMaps.push(
+                            qualityVideoLevelStreamMap + `sgroup:subtitles,agroup:audio_${qualityLevel.height},name:${qualityLevel.height}p`,
+                        );
                     }
-                    command.addOption(`-var_stream_map`, streamMap);
+                    command.addOption(`-var_stream_map`, streamMaps.join(" "));
+                    server.mediaToolLogger.debug("Stream map:", streamMaps.join(" "));
 
                     // HLS options
                     command.addOption("-f hls");
                     command.addOption("-hls_playlist_type event");
                     command.addOption("-start_number 0");
-                    command.addOption("-hls_time 5");
+                    command.addOption("-hls_time 10");
                     command.addOption("-hls_flags independent_segments");
                     command.addOption(`-master_pl_name`, "master.m3u8");
                     command.addOption("-hls_list_size 0");
 
                     if (server.hardwareAcceleration) command.addInputOption("-hwaccel auto");
+
+                    // If more than one core available, leave one unused, to prevent freezing of pc
+                    const availableCpus = os.cpus();
+                    if (availableCpus.length > 1) {
+                        server.mediaToolLogger.debug("Limiting threads to " + (availableCpus.length - 1) + "/" + availableCpus.length);
+                        command.addOption("-threads " + availableCpus.length);
+                    }
 
                     // Output file
                     command.output(outputFilename);

@@ -47,9 +47,9 @@
 
         "//": "Change the quality level presets. If you want to only have one, keep one. 0 quality levels will fail. Height: changes the video resolution (the width gets scaled according to the aspect ration of the source media). Bitrate: The bitrate of the generated quality level. CRF: The quality/compression level (0 for lossless, 51 for worst possible)",
         "qualityLevels": [
-            { "height": 480, "bitrate": 1500, "crf": 30 },
-            { "height": 720, "bitrate": 3000, "crf": 25 },
-            { "height": 1080, "bitrate": 4500, "crf": 23 }
+            { "height": 480, "bitrate": 1500, "audioBitrate": 1000, "crf": 30 },
+            { "height": 720, "bitrate": 3000, "audioBitrate": 2000, "crf": 25 },
+            { "height": 1080, "bitrate": 4500, "audioBitrate": 4000, "crf": 23 }
         ]
     }
 }
