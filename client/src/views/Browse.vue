@@ -96,6 +96,7 @@ function navigate(watchable: Watchable & { progress: Progress[] }, watch: boolea
         .logo-fallback {
             z-index: 1;
             font-size: 48px;
+            max-width: 500px;
         }
 
         .description {
