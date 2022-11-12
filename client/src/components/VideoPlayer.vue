@@ -234,7 +234,10 @@ function changeVolume(event: MouseEvent) {
     video.value!.volume = targetVolume;
 }
 
-function next() {
+function next(asFinished = false) {
+    if (asFinished) {
+        api.reportStreamProgress(streamInfo.id, duration.value, true);
+    }
     router.push({ name: "StreamEpisode", params: { id: props.watchableInfo?.next }, query: { fullscreen: fullscreen.value ? 1 : undefined } });
 }
 
@@ -373,7 +376,7 @@ function getThumbnail(second: number) {
                             </div>
                         </div>
                         <div class="right" @mouseenter="showControls" @mouseleave="hideControls">
-                            <Clickable v-if="props.watchableInfo?.next" @click="next()">
+                            <Clickable v-if="props.watchableInfo?.next" @click="next(elapsed / duration > 0.95)">
                                 <Icon class="big-icon" icon="skip_next" />
                             </Clickable>
                             <Clickable>
@@ -389,7 +392,7 @@ function getThumbnail(second: number) {
             </Transition>
         </div>
         <Transition name="fade-up">
-            <Button class="flying-next" v-if="elapsed / duration > 0.95 && props.watchableInfo?.next && !seeking" @click="next()">
+            <Button class="flying-next" v-if="elapsed / duration > 0.95 && props.watchableInfo?.next && !seeking" @click="next(true)">
                 <Icon icon="skip_next" />
                 {{ $t("watch.nextEpisode") }}
             </Button>

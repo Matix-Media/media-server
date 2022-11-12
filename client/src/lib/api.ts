@@ -152,7 +152,7 @@ export default class API {
         let latest: Progress = progress[0];
         for (const currentProgress of progress) {
             if (!currentProgress.finished && new Date(currentProgress.last_updated) > new Date(latest.last_updated)) {
-                latest == currentProgress;
+                latest = currentProgress;
             }
         }
         return latest;
