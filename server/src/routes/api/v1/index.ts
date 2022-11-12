@@ -138,7 +138,7 @@ export default function (fastify: FastifyInstanceType, options: RegisterOptions,
         if (nextEpisodeInSeason) return nextEpisodeInSeason;
 
         const nextSeason = episode.season.show.seasons.find((value) => value.season_number == episode.season.season_number + 1);
-        if (!nextEpisodeInSeason) throw new NotFound("No next episode found (last season)");
+        if (!nextSeason) throw new NotFound("No next episode found (last season)");
 
         const nextEpisodesInNextSeason = nextSeason.episodes.sort((a, b) => (a.episode_number > b.episode_number ? 1 : -1));
         if (nextEpisodesInNextSeason.length == 0) throw new NotFound("No next episode found (next season has no episodes)");
