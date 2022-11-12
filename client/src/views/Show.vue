@@ -16,7 +16,7 @@ const show = await api.getWatchable(route.params.id.toString());
 const contentRating = API.getAppropriateContentRating(show.content_ratings);
 const resolution = API.getResolutionName(show.quality);
 const progress = API.getLatestProgress(show.progress);
-const selectedSeason = show.show_content!.seasons.length > 0 ? show.show_content!.seasons[0] : null;
+const selectedSeason = ref(show.show_content!.seasons.length > 0 ? show.show_content!.seasons[0] : null);
 const firstEpisode =
     show.show_content!.seasons.length > 0
         ? show.show_content!.seasons[0].episodes.length > 0
