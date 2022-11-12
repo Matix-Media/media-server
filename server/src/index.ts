@@ -59,12 +59,7 @@ const MediaServerConfig = Type.Object({
         generateThumbnails: Type.Boolean(),
         qualityLevels: Type.Array(
             Type.Object(
-                {
-                    height: Type.Number({ minimum: 1 }),
-                    bitrate: Type.Number({ minimum: 1 }),
-                    audioBitrate: Type.Number({ minimum: 1 }),
-                    crf: Type.Number({ minimum: 0, maximum: 51 }),
-                },
+                { height: Type.Number({ minimum: 1 }), bitrate: Type.Number({ minimum: 1 }), crf: Type.Number({ minimum: 0, maximum: 51 }) },
                 { minProperties: 1 },
             ),
         ),
