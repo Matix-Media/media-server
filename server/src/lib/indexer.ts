@@ -231,7 +231,7 @@ export class Indexer {
                 if (probe.format.duration) episode.duration = probe.format.duration;
                 else episode.duration = 0;
 
-                await this.lookupShow(watchable, show, season, episode, filePath);
+                watchable = (await this.lookupShow(watchable, show, season, episode, filePath)).watchable;
             } else {
                 // Movie
                 this.logger.debug("Looking this movie up online ...");
@@ -242,10 +242,8 @@ export class Indexer {
                 if (probe.format.duration) movie.duration = probe.format.duration;
                 else movie.duration = 0;
 
-                await this.lookupMovie(watchable, movie, filePath);
+                watchable = (await this.lookupMovie(watchable, movie, filePath)).watchable;
             }
-
-            await watchable.save();
 
             this.logger.debug(`Successfully indexed "${filePath}"`);
 
@@ -316,6 +314,8 @@ export class Indexer {
         }
 
         await movie.save();
+
+        return { watchable, movie };
     }
 
     async lookupShow(watchable: Watchable, show: Show, season: Season, episode: Episode, filePath: string) {
@@ -412,12 +412,21 @@ export class Indexer {
 
                     if (!season.episodes) season.episodes = [];
                     season.episodes.push(episode);
+
+                    await episode.save();
+                    if (!existingSeason) await season.save();
                 }
+
+                if (!existingWatchable) await watchable.save();
+            } else {
+                await episode.save();
+                await season.save();
+                await show.save();
+                await watchable.save();
             }
-            await episode.save();
-            await season.save();
-            await show.save();
         }
+
+        return { watchable, show, season, episode };
     }
 }
 
