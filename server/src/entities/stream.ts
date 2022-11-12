@@ -159,7 +159,7 @@ export default class Stream extends BaseEntity {
                 }
             });
 
-            server.mediaToolLogger.debug(`Importing from master playlist...`);
+            server.mediaToolLogger.debug(`Importing from master playlist (this could take a while)...`);
 
             let masterPlaylist = await fs.readFile(path.join(tempDirectory, "master.m3u8"), { encoding: "utf8" });
 
