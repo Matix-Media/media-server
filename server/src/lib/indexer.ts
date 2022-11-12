@@ -335,7 +335,7 @@ export class Indexer {
                     watchable = existingWatchable;
                     show = watchable.show_content;
                 } else {
-                    show.until_year = new Date(result.last_air_date).getFullYear();
+                    show.until_year = new Date(showInfos.last_air_date).getFullYear();
 
                     watchable.tmdb_id = result.id;
                     watchable.name = result.name;

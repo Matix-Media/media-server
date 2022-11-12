@@ -11,7 +11,7 @@ export default class Episode extends BaseEntity {
     name: string;
     @Column()
     episode_number: number;
-    @Column()
+    @Column({ length: 1000 })
     description: string;
     @ManyToOne(() => Image)
     @JoinColumn()

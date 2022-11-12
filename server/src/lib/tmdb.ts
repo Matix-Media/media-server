@@ -55,7 +55,6 @@ export interface ShowSearchResult {
         origin_country: string[];
         original_language: string;
         first_air_date: string;
-        last_air_date: string;
         overview: string;
         genre_ids: number[];
         popularity: number;
