@@ -28,7 +28,8 @@ useTitle(movie.name, { titleTemplate: API.getTitleTemplate });
     <div class="movie">
         <div class="hero" :class="{ 'has-progress': progress }">
             <div class="logo-wrapper">
-                <img class="logo" :src="api.getImageUrl(movie.logo!)" :alt="movie.name" />
+                <img v-if="movie.logo" class="logo" :src="api.getImageUrl(movie.logo!)" :alt="movie.name" />
+                <h1 v-else class="logo-fallback">{{ movie.name }}</h1>
             </div>
             <div class="quick-infos">
                 <p v-if="movie.year">{{ movie.year }}</p>

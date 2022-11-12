@@ -34,7 +34,8 @@ useTitle(show.name, { titleTemplate: API.getTitleTemplate });
     <div class="show">
         <div class="hero" :class="{ 'has-progress': progress }">
             <div class="logo-wrapper">
-                <img class="logo" :src="api.getImageUrl(show.logo!)" :alt="show.name" />
+                <img v-if="show.logo" class="logo" :src="api.getImageUrl(show.logo!)" :alt="show.name" />
+                <h1 v-else class="logo-fallback">{{ show.name }}</h1>
             </div>
             <div class="quick-infos">
                 <p v-if="show.year && show.show_content?.until_year">{{ show.year }}-{{ show.show_content.until_year }}</p>
@@ -160,6 +161,7 @@ useTitle(show.name, { titleTemplate: API.getTitleTemplate });
         }
 
         .episodes {
+            margin-left: -20px;
             margin-top: 40px;
             display: flex;
             flex-direction: column;

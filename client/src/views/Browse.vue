@@ -36,7 +36,7 @@ function navigate(watchable: Watchable & { progress: Progress[] }, watch: boolea
             }"
         >
             <img class="logo" v-if="browse.billboard.logo" :src="api.getImageUrl(browse.billboard.logo.id)" alt="" />
-            <h1 v-else>{{ browse.billboard.name }}</h1>
+            <h1 v-else class="logo-fallback">{{ browse.billboard.name }}</h1>
             <p class="description">
                 {{ browse.billboard.description }}
             </p>
@@ -91,6 +91,11 @@ function navigate(watchable: Watchable & { progress: Progress[] }, watch: boolea
         .logo {
             width: 375px;
             z-index: 1;
+        }
+
+        .logo-fallback {
+            z-index: 1;
+            font-size: 48px;
         }
 
         .description {
