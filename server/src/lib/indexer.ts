@@ -321,110 +321,119 @@ export class Indexer {
     async lookupShow(watchable: Watchable, show: Show, season: Season, episode: Episode, filePath: string) {
         const meta = ptt.parse(path.parse(filePath).name);
 
-        if (meta.title.length > 0) {
-            const searchResults = await this.server.tmdb.searchShow(meta.title);
-            if (searchResults.total_results > 0) {
-                const result = searchResults.results[0];
-                const showInfos = await this.server.tmdb.getShow(result.id);
+        if (meta.title.length == 0) {
+            await watchable.save();
+            await show.save();
+            await season.save();
+            await episode.save();
 
-                const existingWatchable = await Watchable.findOne({
-                    where: { tmdb_id: showInfos.id },
-                    relations: { show_content: { seasons: { episodes: true } } },
-                });
-                if (existingWatchable) {
-                    watchable = existingWatchable;
-                    show = watchable.show_content;
-                } else {
-                    show.until_year = new Date(showInfos.last_air_date).getFullYear();
+            return { watchable, show, season, episode };
+        }
 
-                    watchable.tmdb_id = result.id;
-                    watchable.name = result.name;
-                    watchable.description = result.overview;
-                    watchable.rating = showInfos.vote_average;
-                    watchable.year = new Date(result.first_air_date).getFullYear();
-                    watchable.genres = await Promise.all(showInfos.genres.map((tmdbGenre) => Genre.getOrCreate(tmdbGenre.id, tmdbGenre.name)));
-                    watchable.content_ratings = await Promise.all(
-                        showInfos.content_ratings.results.map((rating) => ContentRating.getOrCreate(rating.iso_3166_1, rating.rating)),
-                    );
-                    watchable.directors = await Promise.all(
-                        showInfos.credits.crew
-                            .filter((castMember) => castMember.department == "Directing")
-                            .map((castMember) => CastMember.getOrCreate(castMember.id, castMember.name, castMember.popularity)),
-                    );
-                    watchable.cast = await Promise.all(
-                        showInfos.credits.cast.map((castMember) => CastMember.getOrCreate(castMember.id, castMember.name, castMember.popularity)),
-                    );
-                    watchable.writers = await Promise.all(
-                        showInfos.credits.crew
-                            .filter((castMember) => castMember.department == "Writing")
-                            .map((castMember) => CastMember.getOrCreate(castMember.id, castMember.name, castMember.popularity)),
-                    );
-                    if (showInfos.created_by.length > 0) watchable.creator = showInfos.created_by[0].name;
-                    if (showInfos.backdrop_path)
-                        watchable.backdrop = await Image.fromURL(
-                            this.server,
-                            await this.server.tmdb.getImageUrl(
-                                showInfos.backdrop_path,
-                                TMDBImageType.backdrop,
-                                TMDB.COMMON_IMAGE_SIZES.backdrop.original,
-                            ),
-                        );
-                    if (showInfos.poster_path)
-                        watchable.poster = await Image.fromURL(
-                            this.server,
-                            await this.server.tmdb.getImageUrl(showInfos.poster_path, TMDBImageType.poster, TMDB.COMMON_IMAGE_SIZES.poster.w500),
-                        );
+        const searchResults = await this.server.tmdb.searchShow(meta.title);
 
-                    const images = await this.server.tmdb.getImages(result.id, TMDBModel.tvShows);
-                    if (images.logo)
-                        watchable.logo = await Image.fromURL(
-                            this.server,
-                            await this.server.tmdb.getImageUrl(images.logo.file_path, TMDBImageType.logo, TMDB.COMMON_IMAGE_SIZES.logo.original),
-                        );
-                }
+        if (searchResults.total_results == 0) {
+            await watchable.save();
+            await show.save();
+            await season.save();
+            await episode.save();
 
-                // Get season/episode information
-                if (showInfos.seasons.find((season) => season.season_number == meta.season)) {
-                    const seasonInfos = await this.server.tmdb.getShowSeason(showInfos.id, meta.season);
-                    const existingSeason = existingWatchable ? show.seasons.find((season) => season.season_number == meta.season) : null;
-                    if (existingSeason) {
-                        season = existingSeason;
-                    } else {
-                        season.air_date = seasonInfos.air_date;
-                        season.description = seasonInfos.overview;
-                        season.name = seasonInfos.name;
+            return { watchable, show, season, episode };
+        }
 
-                        if (!show.seasons) show.seasons = [];
-                        show.seasons.push(season);
-                    }
+        const result = searchResults.results[0];
+        const showInfos = await this.server.tmdb.getShow(result.id);
 
-                    const episodeInfos = seasonInfos.episodes.find((episode) => episode.episode_number == meta.episode);
-                    if (episodeInfos) {
-                        episode.name = episodeInfos.name;
-                        episode.description = episodeInfos.overview;
-                        episode.episode_number = meta.episode;
-                        if (episodeInfos.still_path)
-                            episode.poster = await Image.fromURL(
-                                this.server,
-                                await this.server.tmdb.getImageUrl(episodeInfos.still_path, TMDBImageType.still, TMDB.COMMON_IMAGE_SIZES.still.w300),
-                            );
-                    }
+        const existingWatchable = await Watchable.findOne({
+            where: { tmdb_id: showInfos.id },
+            relations: { show_content: { seasons: { episodes: true } } },
+        });
+        if (existingWatchable) {
+            watchable = existingWatchable;
+            show = watchable.show_content;
+        } else {
+            show.until_year = new Date(showInfos.last_air_date).getFullYear();
 
-                    if (!season.episodes) season.episodes = [];
-                    season.episodes.push(episode);
+            watchable.tmdb_id = result.id;
+            watchable.name = result.name;
+            watchable.description = result.overview;
+            watchable.rating = showInfos.vote_average;
+            watchable.year = new Date(result.first_air_date).getFullYear();
+            watchable.genres = await Promise.all(showInfos.genres.map((tmdbGenre) => Genre.getOrCreate(tmdbGenre.id, tmdbGenre.name)));
+            watchable.content_ratings = await Promise.all(
+                showInfos.content_ratings.results.map((rating) => ContentRating.getOrCreate(rating.iso_3166_1, rating.rating)),
+            );
+            watchable.directors = await Promise.all(
+                showInfos.credits.crew
+                    .filter((castMember) => castMember.department == "Directing")
+                    .map((castMember) => CastMember.getOrCreate(castMember.id, castMember.name, castMember.popularity)),
+            );
+            watchable.cast = await Promise.all(
+                showInfos.credits.cast.map((castMember) => CastMember.getOrCreate(castMember.id, castMember.name, castMember.popularity)),
+            );
+            watchable.writers = await Promise.all(
+                showInfos.credits.crew
+                    .filter((castMember) => castMember.department == "Writing")
+                    .map((castMember) => CastMember.getOrCreate(castMember.id, castMember.name, castMember.popularity)),
+            );
+            if (showInfos.created_by.length > 0) watchable.creator = showInfos.created_by[0].name;
+            if (showInfos.backdrop_path)
+                watchable.backdrop = await Image.fromURL(
+                    this.server,
+                    await this.server.tmdb.getImageUrl(showInfos.backdrop_path, TMDBImageType.backdrop, TMDB.COMMON_IMAGE_SIZES.backdrop.original),
+                );
+            if (showInfos.poster_path)
+                watchable.poster = await Image.fromURL(
+                    this.server,
+                    await this.server.tmdb.getImageUrl(showInfos.poster_path, TMDBImageType.poster, TMDB.COMMON_IMAGE_SIZES.poster.w500),
+                );
 
-                    await episode.save();
-                    if (!existingSeason) await season.save();
-                }
+            const images = await this.server.tmdb.getImages(result.id, TMDBModel.tvShows);
+            if (images.logo)
+                watchable.logo = await Image.fromURL(
+                    this.server,
+                    await this.server.tmdb.getImageUrl(images.logo.file_path, TMDBImageType.logo, TMDB.COMMON_IMAGE_SIZES.logo.original),
+                );
+        }
 
-                if (!existingWatchable) await watchable.save();
+        // Get season/episode information
+        const existingSeason = existingWatchable ? show.seasons.find((season) => season.season_number == meta.season) : null;
+
+        if (showInfos.seasons.find((season) => season.season_number == meta.season)) {
+            const seasonInfos = await this.server.tmdb.getShowSeason(showInfos.id, meta.season);
+
+            if (existingSeason) {
+                season = existingSeason;
             } else {
-                await episode.save();
-                await season.save();
-                await show.save();
-                await watchable.save();
+                season.air_date = seasonInfos.air_date;
+                season.description = seasonInfos.overview;
+                season.name = seasonInfos.name;
+            }
+
+            const episodeInfos = seasonInfos.episodes.find((episode) => episode.episode_number == meta.episode);
+            if (episodeInfos) {
+                episode.name = episodeInfos.name;
+                episode.description = episodeInfos.overview;
+                episode.episode_number = meta.episode;
+                if (episodeInfos.still_path)
+                    episode.poster = await Image.fromURL(
+                        this.server,
+                        await this.server.tmdb.getImageUrl(episodeInfos.still_path, TMDBImageType.still, TMDB.COMMON_IMAGE_SIZES.still.w300),
+                    );
             }
         }
+        if (!existingSeason) {
+            if (!show.seasons) show.seasons = [];
+            show.seasons.push(season);
+        }
+
+        if (!season.episodes) season.episodes = [];
+        season.episodes.push(episode);
+
+        await episode.save();
+        await season.save();
+        await show.save();
+        await watchable.save();
 
         return { watchable, show, season, episode };
     }
