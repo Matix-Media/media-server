@@ -251,6 +251,10 @@ export default class API {
         return (await this.client.get("/show/episode/" + episodeId)).data;
     }
 
+    public async getNextEpisode(episodeId: string): Promise<Episode> {
+        return (await this.client.get("/show/episode/" + episodeId + "/next")).data;
+    }
+
     public async getMovie(movieId: string): Promise<MovieStreamInfo> {
         return (await this.client.get("/movie/" + movieId)).data;
     }
