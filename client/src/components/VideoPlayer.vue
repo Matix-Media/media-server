@@ -10,7 +10,7 @@ import Spinner from "src/assets/images/spinner.svg";
 const props = defineProps<{
     streamId: string;
     showControls: boolean;
-    watchableInfo?: { next?: string; title: string; subtitle?: string };
+    watchableInfo?: { next?: string; title: string; subtitle?: string; thumbnail?: string };
     back?: string;
 }>();
 
@@ -23,6 +23,7 @@ const progressBar = ref<HTMLDivElement>();
 const volumeSlider = ref<HTMLDivElement>();
 const isSupported = ref(Hls.isSupported());
 let hls: Hls;
+const hasMediaSession = "mediaSession" in navigator;
 const api = API.getInstance();
 const streamInfo = await api.getStream(props.streamId);
 let progressReportInterval: number;
@@ -44,6 +45,10 @@ const changingVolumeMouseDown = ref(false);
 const controlsHidden = ref(false);
 const hideControlsTimeout = ref<number>(-1);
 
+watch(playing, (value) => {
+    if (hasMediaSession && props.showControls) navigator.mediaSession.playbackState = value ? "playing" : "paused";
+});
+
 onMounted(async () => {
     if (!isSupported || !video.value) return;
 
@@ -60,6 +65,9 @@ onMounted(async () => {
         if (duration.value - elapsed.value < 10) {
             api.reportStreamProgress(streamInfo.id, duration.value, true);
         }
+        if (hasMediaSession && props.showControls) {
+            navigator.mediaSession.setPositionState({ duration: duration.value, position: elapsed.value, playbackRate: 1 });
+        }
     };
 
     video.value.onfullscreenchange = () => {
@@ -74,12 +82,30 @@ onMounted(async () => {
         duration.value = video.value?.duration!;
         if (dissectTime(video.value?.duration!).hours == 0) hasHours.value = false;
         if (streamInfo.progress) video.value!.currentTime = streamInfo.progress.second;
+
         play();
         hideControls();
+
         progressReportInterval = setInterval(() => {
             if (!playing.value) return;
             api.reportStreamProgress(streamInfo.id, elapsed.value, duration.value - elapsed.value < 10);
         }, 10000) as any as number;
+
+        if (hasMediaSession && props.showControls && props.watchableInfo) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: props.watchableInfo.title,
+                album: props.watchableInfo.subtitle,
+                artwork: props.watchableInfo.thumbnail ? [{ src: props.watchableInfo.thumbnail }] : undefined,
+            });
+
+            navigator.mediaSession.setActionHandler("play", () => togglePlayState());
+            navigator.mediaSession.setActionHandler("pause", () => togglePlayState());
+            navigator.mediaSession.setActionHandler("stop", () => togglePlayState());
+            if (props.watchableInfo.next) navigator.mediaSession.setActionHandler("nexttrack", () => next());
+            navigator.mediaSession.setActionHandler("seekto", (details) => {
+                if (details.seekTime) video.value!.currentTime = details.seekTime;
+            });
+        }
     };
 
     window.onkeyup = (event) => {
@@ -127,6 +153,9 @@ onMounted(async () => {
 onBeforeUnmount(() => {
     hls.destroy();
     clearInterval(progressReportInterval);
+    if (hasMediaSession && props.showControls) {
+        navigator.mediaSession.playbackState = "none";
+    }
 });
 
 watch(volume, () => {
