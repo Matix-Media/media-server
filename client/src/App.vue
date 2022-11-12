@@ -27,7 +27,7 @@ if (route.query.fullscreen) {
     <RouterView v-slot="{ Component }" ref="root" v-if="!loading">
         <Suspense timeout="0">
             <template #default>
-                <Component :is="Component"></Component>
+                <Component :is="Component" :key="route.path"></Component>
             </template>
 
             <template #fallback>
