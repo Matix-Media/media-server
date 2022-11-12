@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import Hls from "hls.js";
 import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { RouteLocationRaw, useRoute, useRouter } from "vue-router";
 import API from "../lib/api";
 import Clickable from "./Clickable.vue";
 import Icon from "./Icon.vue";
@@ -12,7 +12,7 @@ const props = defineProps<{
     streamId: string;
     showControls: boolean;
     watchableInfo?: { next?: string; title: string; subtitle?: string; thumbnail?: string };
-    back?: string;
+    back?: RouteLocationRaw;
 }>();
 
 const router = useRouter();
@@ -194,7 +194,8 @@ async function toggleFullscreen() {
 
 function back() {
     //if (router.options.history.state.back) router.back();
-    router.push({ name: props.back });
+    if (props.back) router.push(props.back);
+    else router.push({ name: "Browse" });
 }
 
 function seek(event: MouseEvent) {

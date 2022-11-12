@@ -49,7 +49,7 @@ useTitle(t("watch.title", { title: isMovie ? movie!.watchable.name : episode!.se
                           thumbnail: episode.poster ? api.getImageUrl(episode.poster) : undefined,
                       }
             "
-            back="Browse"
+            :back="{ name: isMovie ? 'Movie' : 'Show', params: { id: isMovie ? movie.watchable.id : episode.season.show.watchable.id } }"
         />
     </div>
 </template>
