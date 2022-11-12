@@ -6,6 +6,7 @@ import API from "../lib/api";
 import Clickable from "./Clickable.vue";
 import Icon from "./Icon.vue";
 import Spinner from "src/assets/images/spinner.svg";
+import Button from "./Button.vue";
 
 const props = defineProps<{
     streamId: string;
@@ -231,7 +232,7 @@ function changeVolume(event: MouseEvent) {
 }
 
 function next() {
-    router.push({ name: "StreamEpisode", params: { id: props.watchableInfo?.next }, query: { fullscreen: 1 } });
+    router.push({ name: "StreamEpisode", params: { id: props.watchableInfo?.next }, query: { fullscreen: fullscreen.value ? 1 : undefined } });
 }
 
 function hideControls() {
@@ -384,6 +385,12 @@ function getThumbnail(second: number) {
                 </div>
             </Transition>
         </div>
+        <Transition name="fade-up">
+            <Button class="flying-next" v-if="elapsed / duration > 0.95 && props.watchableInfo?.next && !seeking" @click="next()">
+                <Icon icon="skip_next" />
+                {{ $t("watch.nextEpisode") }}
+            </Button>
+        </Transition>
     </div>
 </template>
 
@@ -436,6 +443,27 @@ function getThumbnail(second: number) {
         width: inherit;
         height: inherit;
         background-color: #000;
+    }
+
+    .flying-next {
+        position: absolute;
+        bottom: 150px;
+        right: var(--side-padding);
+        font: var(--font-20);
+        background-color: var(--glass-background-active);
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        padding-left: 10px;
+
+        &:hover {
+            background-color: var(--image-glass-border);
+        }
+
+        .icon {
+            font-size: 28px;
+            margin-right: 10px;
+        }
     }
 
     .controls {
