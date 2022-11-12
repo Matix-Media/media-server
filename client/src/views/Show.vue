@@ -82,7 +82,7 @@ useTitle(show.name, { titleTemplate: API.getTitleTemplate });
             <div class="seasons">
                 <Clickable
                     class="season"
-                    v-for="season in show.show_content!.seasons"
+                    v-for="season in show.show_content!.seasons.sort((a, b) => a.season_number - b.season_number)"
                     :class="{selected: selectedSeason ? selectedSeason!.id == season.id : false}"
                     @click="selectedSeason = season"
                 >
@@ -92,7 +92,7 @@ useTitle(show.name, { titleTemplate: API.getTitleTemplate });
             <div class="episodes">
                 <RouterLink
                     class="episode"
-                    v-for="episode in selectedSeason ? selectedSeason.episodes : []"
+                    v-for="episode in selectedSeason ? selectedSeason.episodes.sort((a, b) => a.episode_number - b.episode_number) : []"
                     :class="{ active: progress ? episode.stream.id == progress.stream.id : false }"
                     :to="{ name: 'StreamEpisode', params: { id: episode.id } }"
                 >
