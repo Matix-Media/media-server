@@ -187,7 +187,8 @@ onMounted(() => {
 
                                 <Button
                                     class="info"
-                                    @click.prevent="router.push({ name: watchable.type == 'show' ? 'Show' : 'Movie', params: { id: watchable.id } })"
+                                    @click.prevent
+                                    @click.stop="router.push({ name: watchable.type == 'show' ? 'Show' : 'Movie', params: { id: watchable.id } })"
                                 >
                                     <Icon icon="info"
                                 /></Button>
