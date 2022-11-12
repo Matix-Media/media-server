@@ -331,7 +331,9 @@ onMounted(() => {
                 box-shadow: var(--image-glass);
                 aspect-ratio: 16 / 9;
                 width: 100%;
+                max-width: 100%;
                 text-decoration: none;
+                overflow: hidden;
 
                 display: flex;
                 align-items: center;
@@ -419,7 +421,9 @@ onMounted(() => {
     }
 
     .image-or-trailer {
-        aspect-ratio: 16 / 9;
+        height: 100%;
+        width: 100%;
+        //aspect-ratio: 16 / 9;
         position: relative;
         background-size: cover;
         background-position: center;
