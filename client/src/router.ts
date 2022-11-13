@@ -69,6 +69,10 @@ const routes: RouteRecordRaw[] = [
             },
         ],
     },
+    {
+        path: ":pathMatch(.*)*",
+        redirect: { name: "Browse" },
+    },
 ];
 
 const router = createRouter({
