@@ -6,4 +6,6 @@ export default class Profile extends BaseEntity {
     id: string;
     @Column()
     name: string;
+    @Column({ nullable: true })
+    auth_provider_id?: string;
 }

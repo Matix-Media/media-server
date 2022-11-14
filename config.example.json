@@ -51,5 +51,29 @@
             { "height": 720, "bitrate": 3000, "crf": 25 },
             { "height": 1080, "bitrate": 4500, "crf": 23 }
         ]
+    },
+
+    "//": "Auth for authenticating users using third-party oauth2 provider (e.g. authentik)",
+    "auth": {
+        "//": "If a third-party oauth2 authentication provider should be used",
+        "enabled": false,
+
+        "//": "A secret key for signing and verifying generated JWTs",
+        "jwtSecret": "MY_RANDOM_SECRET",
+
+        "//": "The url where the user logs in",
+        "authorizationUrl": "https://example.com/oauth2/authorize",
+
+        "//": "The url where the token gets fetched from",
+        "tokenUrl": "https://example.com/oauth2/token",
+
+        "//": "The url where user infos get retrieved from",
+        "userInfoUrl": "https://example.com/oauth2/userinfo",
+
+        "//": "The oauth2 client id",
+        "clientId": "",
+
+        "//": "The oauth2 client secret",
+        "clientSecret": ""
     }
 }

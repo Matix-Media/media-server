@@ -1,4 +1,5 @@
-import axios, { AxiosInstance } from "axios";
+import axios, { AxiosInstance, CreateAxiosDefaults } from "axios";
+import { useRoute, useRouter } from "vue-router";
 
 export interface Stream {
     id: string;
@@ -189,6 +190,7 @@ export default class API {
     private initializingCallbacks: Array<() => void> = [];
 
     private _selectedProfile?: Profile;
+    private _accessToken?: string;
 
     private constructor() {
         this.baseURL = (import.meta.env.DEV ? "http://localhost:3000/" : window.location.origin + "/") + "api/v1/";
@@ -200,11 +202,21 @@ export default class API {
         if (this.initializing) return await new Promise<void>((resolve) => this.initializingCallbacks.push(resolve));
         this.initializing = true;
 
-        const savedProfileId = localStorage.getItem("profileId");
-        if (savedProfileId) {
-            const profiles = await this.getProfiles();
-            const profile = profiles.find((profile) => profile.id == savedProfileId);
-            if (profile) this.setProfile(profile);
+        if (window.location.pathname == "/auth/login") {
+            const params = new URLSearchParams(window.location.search);
+            if (!params.has("code") || !params.has("state")) throw new Error("Missing params");
+            await this.loginUsingOauth(params.get("code")!, params.get("state")!);
+        } else {
+            const savedProfileId = localStorage.getItem("profileId");
+            const savedAccessToken = localStorage.getItem("accessToken");
+            console.log("savedProfileId:", savedProfileId);
+            console.log("savedAccessToken:", savedAccessToken);
+            if (savedProfileId) {
+                const profiles = savedAccessToken ? await this.getProfiles(savedAccessToken) : await this.getProfiles();
+                const profile = profiles.find((profile) => profile.id == savedProfileId);
+                if (profile && savedAccessToken) this.setProfile(profile, savedAccessToken);
+                else if (profile) this.setProfile(profile);
+            }
         }
 
         this.initialized = true;
@@ -212,8 +224,14 @@ export default class API {
         this.initializingCallbacks.map((callback) => callback());
     }
 
-    public setProfile(profile: Profile) {
-        this.client = axios.create({ baseURL: this.baseURL, headers: { "x-profile": profile.id } });
+    public setProfile(profile: Profile, accessToken?: string) {
+        const options: { baseURL: string; headers: Record<string, any> } = { baseURL: this.baseURL, headers: { "x-profile": profile.id } };
+        if (accessToken) {
+            options.headers["Authorization"] = `Bearer ${accessToken}`;
+            this._accessToken = accessToken;
+            localStorage.setItem("accessToken", accessToken);
+        }
+        this.client = axios.create(options);
         this._selectedProfile = profile;
         localStorage.setItem("profileId", profile.id);
     }
@@ -235,8 +253,13 @@ export default class API {
         return this._selectedProfile;
     }
 
-    public async getProfiles(): Promise<Profile[]> {
-        return (await this.client.get("/profiles")).data;
+    public async getProfiles(accessToken?: string): Promise<Profile[]> {
+        if (accessToken) {
+            {
+                console.log("Requesting profiles with access token:", accessToken);
+                return (await this.client.get("/profiles", { headers: { Authorization: `Bearer ${accessToken}` } })).data;
+            }
+        } else return (await this.client.get("/profiles")).data;
     }
 
     public async createProfile(profileName: string): Promise<Profile> {
@@ -278,6 +301,16 @@ export default class API {
 
     public async getWatchable(watchableId: string): Promise<Watchable & { progress: Array<Progress> }> {
         return (await this.client.get("/watchable/" + watchableId)).data;
+    }
+
+    public getLoginUrl() {
+        return new URL("auth/login", this.baseURL);
+    }
+
+    public async loginUsingOauth(code: string, state: string) {
+        const res = await this.client.post("/auth/callback", { code, state });
+        this.setProfile(res.data.profile, res.data.accessToken);
+        return res.data;
     }
 }
 

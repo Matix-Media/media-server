@@ -6,6 +6,7 @@ import CreateProfile from "src/views/profile/Create.vue";
 import Movie from "src/views/Movie.vue";
 import Show from "src/views/Show.vue";
 import Stream from "src/views/Stream.vue";
+import Login from "src/views/Login.vue";
 import API from "./lib/api";
 
 const navigationGuards: {
@@ -70,7 +71,12 @@ const routes: RouteRecordRaw[] = [
         ],
     },
     {
-        path: ":pathMatch(.*)*",
+        path: "/auth/login",
+        name: "Login",
+        component: Login,
+    },
+    {
+        path: "/:pathMatch(.*)*",
         redirect: { name: "Browse" },
     },
 ];

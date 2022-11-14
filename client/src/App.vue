@@ -1,16 +1,25 @@
 <script setup lang="ts">
 import VideoPlayer from "./components/VideoPlayer.vue";
 import Spinner from "src/assets/images/spinner.svg";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { nextTick, onMounted, ref } from "vue";
 import API from "./lib/api";
+import axios from "axios";
 
+const router = useRouter();
 const route = useRoute();
 const root = ref<HTMLDivElement>();
 const loading = ref(true);
 const api = API.getInstance();
 onMounted(async () => {
-    await api.initialize();
+    try {
+        await api.initialize();
+    } catch (err) {
+        if (axios.isAxiosError(err) && (err.response?.status == 401 || err.response?.status == 403)) {
+            window.location.href = api.getLoginUrl().href;
+        }
+        console.error(err);
+    }
     loading.value = false;
 });
 

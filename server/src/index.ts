@@ -27,6 +27,7 @@ import { Static, Type } from "@sinclair/typebox";
 import Ajv from "ajv";
 import IndexLog from "./entities/indexLog";
 import { readFileSync } from "fs";
+import fastifyJwt from "@fastify/jwt";
 
 declare module "fastify" {
     export interface FastifyInstance {
@@ -64,6 +65,15 @@ const MediaServerConfig = Type.Object({
             ),
         ),
     }),
+    auth: Type.Object({
+        enabled: Type.Boolean(),
+        jwtSecret: Type.String(),
+        authorizationUrl: Type.String(),
+        tokenUrl: Type.String(),
+        userInfoUrl: Type.String(),
+        clientId: Type.String(),
+        clientSecret: Type.String(),
+    }),
 });
 
 export type FastifyInstanceType = FastifyInstance<
@@ -82,6 +92,15 @@ export class MediaServer {
     public mediaToolLogger: Logger;
     public webServer: FastifyInstanceType;
     public hardwareAcceleration: boolean;
+    public authConfig: {
+        enabled: boolean;
+        jwtSecret: string;
+        authorizationUrl: string;
+        tokenUrl: string;
+        userInfoUrl: string;
+        clientId: string;
+        clientSecret: string;
+    };
 
     private saveDirectory: string;
     private port: number;
@@ -148,6 +167,9 @@ export class MediaServer {
         this.webServer.withTypeProvider<TypeBoxTypeProvider>();
         this.webServer.decorate("mediaServer", { server: this });
         this.webServer.register(routes);
+
+        this.authConfig = config.auth;
+        if (this.authConfig.enabled) this.webServer.register(fastifyJwt, { secret: this.authConfig.jwtSecret });
     }
 
     public async boot() {
