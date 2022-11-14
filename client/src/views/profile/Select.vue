@@ -4,14 +4,24 @@ import API, { Profile, Browse } from "../../lib/api";
 import Icon from "src/components/Icon.vue";
 import { useRoute, useRouter } from "vue-router";
 import { useTitle } from "@vueuse/core";
+import axios from "axios";
 
 const route = useRoute();
 const router = useRouter();
 const api = API.getInstance();
-const profiles = ref<Profile[]>(await api.getProfiles());
-useTitle("", { titleTemplate: API.getTitleTemplate });
+const profiles = ref<Profile[]>();
+try {
+    profiles.value = await api.getProfiles();
 
-if (profiles.value.length == 0) createProfile();
+    useTitle("", { titleTemplate: API.getTitleTemplate });
+
+    if (profiles.value.length == 0) createProfile();
+} catch (err) {
+    if (axios.isAxiosError(err) && (err.response?.status == 401 || err.response?.status == 403)) {
+        window.location.href = api.getLoginUrl().href;
+    }
+    console.error(err);
+}
 
 function createProfile() {
     router.push({ name: "CreateProfile", query: { next: route.query.next } });
