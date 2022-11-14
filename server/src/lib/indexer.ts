@@ -314,6 +314,7 @@ export class Indexer {
         }
 
         await movie.save();
+        await watchable.save();
 
         return { watchable, movie };
     }
