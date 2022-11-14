@@ -97,7 +97,7 @@ export interface Progress {
     stream: Stream;
     episode: Episode;
     movie: Movie;
-    last_updated: string;
+    last_updates: string;
 }
 
 export interface Show {
@@ -153,8 +153,8 @@ export default class API {
         let latest: Progress = progress[0];
         for (const currentProgress of progress) {
             console.log(currentProgress);
-            console.log(currentProgress.last_updated, "<", latest.last_updated);
-            if (new Date(currentProgress.last_updated) < new Date(latest.last_updated)) {
+            console.log(currentProgress.last_updates, ">", latest.last_updates);
+            if (new Date(currentProgress.last_updates) > new Date(latest.last_updates)) {
                 latest = currentProgress;
             }
         }
