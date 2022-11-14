@@ -206,6 +206,7 @@ export default class API {
             const params = new URLSearchParams(window.location.search);
             if (!params.has("code") || !params.has("state")) throw new Error("Missing params");
             await this.loginUsingOauth(params.get("code")!, params.get("state")!);
+            useRouter().replace({ name: "Browse" });
         } else {
             const savedProfileId = localStorage.getItem("profileId");
             const savedAccessToken = localStorage.getItem("accessToken");
@@ -251,6 +252,10 @@ export default class API {
 
     public get selectedProfile() {
         return this._selectedProfile;
+    }
+
+    public get accessToken() {
+        return this._accessToken;
     }
 
     public async getProfiles(accessToken?: string): Promise<Profile[]> {
