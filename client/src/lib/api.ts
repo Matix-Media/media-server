@@ -152,10 +152,13 @@ export default class API {
 
         let latest: Progress = progress[0];
         for (const currentProgress of progress) {
-            if (new Date(currentProgress.last_updated) > new Date(latest.last_updated)) {
+            console.log(currentProgress);
+            console.log(currentProgress.last_updated, "<", latest.last_updated);
+            if (new Date(currentProgress.last_updated) < new Date(latest.last_updated)) {
                 latest = currentProgress;
             }
         }
+        console.log("Returned:", latest);
         return latest;
     }
 

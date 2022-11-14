@@ -57,7 +57,7 @@ export default function (fastify: FastifyInstanceType, options: RegisterOptions,
         }
     });
 
-    fastify.get("/stream/hls/:id", { schema: { params: Type.Object({ id: Type.String({ format: "uuid" }) }) } }, async (req, res) => {
+    fastify.get("/stream/hls/:id", { schema: { params: Type.Object({ id: Type.String() }) } }, async (req, res) => {
         const streamPartId = req.params.id.split(".")[0];
         const streamPart = await StreamPart.findOneBy({ id: streamPartId });
         if (!streamPart) throw new NotFound();
