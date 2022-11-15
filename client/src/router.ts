@@ -2,12 +2,9 @@ import { createRouter, createWebHistory, RouteLocationNormalized, RouteLocationR
 import WithHeader from "src/views/WithHeader.vue";
 import Browse from "src/views/Browse.vue";
 import SelectProfile from "src/views/profile/Select.vue";
-import CreateProfile from "src/views/profile/Create.vue";
-import Movie from "src/views/Movie.vue";
-import Show from "src/views/Show.vue";
-import Stream from "src/views/Stream.vue";
 import Login from "src/views/Login.vue";
 import API from "./lib/api";
+import { defineAsyncComponent } from "vue";
 
 const navigationGuards: {
     [key: string]: (to: RouteLocationNormalized, from: RouteLocationNormalized) => void | RouteLocationRaw | Promise<void | RouteLocationRaw>;
@@ -28,7 +25,7 @@ const routes: RouteRecordRaw[] = [
     {
         path: "/profile/create",
         name: "CreateProfile",
-        component: CreateProfile,
+        component: defineAsyncComponent(() => import("src/views/profile/Create.vue")),
     },
     {
         path: "/movie/watch/:id",
@@ -36,7 +33,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
             streamType: "movie",
         },
-        component: Stream,
+        component: defineAsyncComponent(() => import("src/views/Stream.vue")),
     },
     {
         path: "/show/watch/:id",
@@ -44,7 +41,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
             streamType: "episode",
         },
-        component: Stream,
+        component: defineAsyncComponent(() => import("src/views/Stream.vue")),
     },
     {
         path: "/",
@@ -61,12 +58,12 @@ const routes: RouteRecordRaw[] = [
             {
                 path: "movie/:id",
                 name: "Movie",
-                component: Movie,
+                component: defineAsyncComponent(() => import("src/views/Movie.vue")),
             },
             {
                 path: "show/:id",
                 name: "Show",
-                component: Show,
+                component: defineAsyncComponent(() => import("src/views/Show.vue")),
             },
         ],
     },
