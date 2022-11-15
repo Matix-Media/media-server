@@ -123,6 +123,18 @@ function scrollLeft() {
     slides.value.scroll({ left: slides.value.scrollLeft - document.body.clientWidth - sidePadding, behavior: "smooth" });
 }
 
+function slidePointerDown(event: PointerEvent, watchable: Watchable & { progress: Progress[] }) {
+    if (event.pointerType == "mouse") {
+        router.push(getWatchableRoute(watchable));
+    } else {
+        if (hoveredSlide.value == watchable.id) {
+            router.push(getWatchableRoute(watchable));
+        } else {
+            onSlideHoverEnter(watchable);
+        }
+    }
+}
+
 onMounted(() => {
     onScroll();
 });
@@ -153,6 +165,8 @@ onMounted(() => {
             >
                 <RouterLink
                     class="image"
+                    @click.prevent=""
+                    @pointerdown="(e: PointerEvent) => slidePointerDown(e, watchable)"
                     @mouseenter="(event: MouseEvent) => onSlideHoverEnter(watchable)"
                     @mouseleave="(event: MouseEvent) => onSlideHoverLeave(watchable)"
                     :style="{ backgroundImage: 'url(' + (watchable.backdrop ? api.getImageUrl(watchable.backdrop.id) : WatchablePlaceholder) + ')' }"
