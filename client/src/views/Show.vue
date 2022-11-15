@@ -13,6 +13,9 @@ const route = useRoute();
 const router = useRouter();
 const api = useAPI();
 const show = await api.getWatchable(route.params.id.toString());
+if (show.type == "movie") {
+    router.replace({ name: "Movie", params: { id: show.id } });
+}
 const contentRating = API.getAppropriateContentRating(show.content_ratings);
 const resolution = API.getResolutionName(show.quality);
 const progress = API.getLatestProgress(show.progress);

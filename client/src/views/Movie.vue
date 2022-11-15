@@ -6,13 +6,15 @@ import Icon from "src/components/Icon.vue";
 import Progress from "src/components/Progress.vue";
 import Clickable from "src/components/Clickable.vue";
 import { ref } from "vue";
-import { useI18n } from "vue-i18n";
 import { useTitle } from "@vueuse/core";
 
 const route = useRoute();
 const router = useRouter();
 const api = useAPI();
 const movie = await api.getWatchable(route.params.id.toString());
+if (movie.type == "show") {
+    router.replace({ name: "Show", params: { id: movie.id } });
+}
 const contentRating = API.getAppropriateContentRating(movie.content_ratings);
 const resolution = API.getResolutionName(movie.quality);
 const progress = API.getLatestProgress(movie.progress);

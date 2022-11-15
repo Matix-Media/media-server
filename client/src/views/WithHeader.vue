@@ -113,6 +113,11 @@ header {
     grid-template-columns: repeat(3, 1fr);
     align-items: center;
 
+    @media (max-width: $mobile) {
+        width: 100vw;
+        grid-template-columns: 1fr 2fr 1fr;
+    }
+
     a {
         color: var(--white);
         text-decoration: none;
@@ -132,6 +137,10 @@ header {
             border-radius: var(--border-radius);
             backdrop-filter: var(--glass-blur);
             transition: background-color 0.2s;
+
+            @media (max-width: $mobile) {
+                width: 100%;
+            }
 
             &.focused {
                 background-color: var(--glass-background-active);

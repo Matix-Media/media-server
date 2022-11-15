@@ -89,7 +89,7 @@ function navigate(watchable: Watchable & { progress: Progress[] }, watch: boolea
         transition: background-image 0.2s;
 
         .logo {
-            width: 375px;
+            max-width: 375px;
             z-index: 1;
         }
 
@@ -102,7 +102,7 @@ function navigate(watchable: Watchable & { progress: Progress[] }, watch: boolea
         .description {
             margin-top: 40px;
             font: var(--font-20);
-            width: 430px;
+            max-width: 430px;
             z-index: 1;
         }
 

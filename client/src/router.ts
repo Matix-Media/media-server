@@ -4,7 +4,6 @@ import Browse from "src/views/Browse.vue";
 import SelectProfile from "src/views/profile/Select.vue";
 import Login from "src/views/Login.vue";
 import API from "./lib/api";
-import { defineAsyncComponent } from "vue";
 
 const navigationGuards: {
     [key: string]: (to: RouteLocationNormalized, from: RouteLocationNormalized) => void | RouteLocationRaw | Promise<void | RouteLocationRaw>;
@@ -25,7 +24,7 @@ const routes: RouteRecordRaw[] = [
     {
         path: "/profile/create",
         name: "CreateProfile",
-        component: defineAsyncComponent(() => import("src/views/profile/Create.vue")),
+        component: () => import("src/views/profile/Create.vue"),
     },
     {
         path: "/movie/watch/:id",
@@ -33,7 +32,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
             streamType: "movie",
         },
-        component: defineAsyncComponent(() => import("src/views/Stream.vue")),
+        component: () => import("src/views/Stream.vue"),
     },
     {
         path: "/show/watch/:id",
@@ -41,7 +40,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
             streamType: "episode",
         },
-        component: defineAsyncComponent(() => import("src/views/Stream.vue")),
+        component: () => import("src/views/Stream.vue"),
     },
     {
         path: "/",
@@ -58,12 +57,12 @@ const routes: RouteRecordRaw[] = [
             {
                 path: "movie/:id",
                 name: "Movie",
-                component: defineAsyncComponent(() => import("src/views/Movie.vue")),
+                component: () => import("src/views/Movie.vue"),
             },
             {
                 path: "show/:id",
                 name: "Show",
-                component: defineAsyncComponent(() => import("src/views/Show.vue")),
+                component: () => import("src/views/Show.vue"),
             },
         ],
     },

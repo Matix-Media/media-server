@@ -163,7 +163,7 @@ onMounted(() => {
                 :class="{ 'no-progress': !API.getLatestProgress(watchable.progress) }"
                 :id="'scroll-slide-' + watchable.id + '-' + sliderId"
             >
-                <RouterLink
+                <div
                     class="image"
                     @click.prevent=""
                     @pointerdown="(e: PointerEvent) => slidePointerDown(e, watchable)"
@@ -171,7 +171,6 @@ onMounted(() => {
                     @mouseleave="(event: MouseEvent) => onSlideHoverLeave(watchable)"
                     :style="{ backgroundImage: 'url(' + (watchable.backdrop ? api.getImageUrl(watchable.backdrop.id) : WatchablePlaceholder) + ')' }"
                     :key="watchable.id"
-                    :to="getWatchableRoute(watchable)"
                 >
                     <img class="logo" v-if="watchable.logo" :src="api.getImageUrl(watchable.logo.id)" :alt="watchable.name" />
                     <h3 class="fallback-logo" v-else>{{ watchable.name }}</h3>
@@ -231,7 +230,7 @@ onMounted(() => {
                             </div>
                         </div>
                     </Teleport>
-                </RouterLink>
+                </div>
 
                 <div class="progress" v-if="watchable.progress.length > 0">
                     <div
@@ -389,6 +388,10 @@ onMounted(() => {
             background-color: rgba(var(--background-color-values), 0.75);
         }
 
+        .icon {
+            display: flex;
+        }
+
         &.scroll-left {
             left: 0;
             border-top-left-radius: 0;
@@ -410,7 +413,7 @@ onMounted(() => {
     transition: transform 0.3s, opacity 0.3s;
     position: absolute;
     top: -20px;
-    width: 150%;
+    width: 100%;
     border-radius: var(--border-radius);
     overflow: hidden;
     background-color: var(--background);

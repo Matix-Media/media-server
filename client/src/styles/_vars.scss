@@ -1,5 +1,7 @@
 @import "src/assets/fonts/poppins/poppins.css";
 
+/* Break Points */
+$mobile: 450px;
 
 :root {
     /* Color styles */
@@ -32,4 +34,9 @@
     --image-glass: inset 0 0 0 1px var(--image-glass-border);
     --border-radius: 10px;
     --side-padding: 60px;
+
+
+    @media (max-width: $mobile) {
+        --side-padding: 15px;
+    }
 }
