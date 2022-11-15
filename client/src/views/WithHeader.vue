@@ -38,7 +38,7 @@ function logout() {
                 {{ api.selectedProfile?.name.charAt(0).toUpperCase() }}
                 <Transition name="fade-down">
                     <div class="popup" v-if="userPopupOpen">
-                        <Clickable @click="switchProfile">
+                        <Clickable @click="switchProfile" v-if="!api.selectedProfile?.auth_provider_id">
                             {{ $t("profile.menu.switch") }}
                         </Clickable>
                         <Clickable @click="logout">{{ $t("profile.menu.logout") }}</Clickable>

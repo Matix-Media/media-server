@@ -21,6 +21,7 @@ export interface Stream {
 export interface Profile {
     id: string;
     name: string;
+    auth_provider_id?: string;
 }
 
 export interface Genre {
@@ -213,13 +214,18 @@ export default class API {
         } else {
             const savedProfileId = localStorage.getItem("profileId");
             const savedAccessToken = localStorage.getItem("accessToken");
-            console.log("savedProfileId:", savedProfileId);
-            console.log("savedAccessToken:", savedAccessToken);
             if (savedProfileId) {
-                const profiles = savedAccessToken ? await this.getProfiles(savedAccessToken) : await this.getProfiles();
-                const profile = profiles.find((profile) => profile.id == savedProfileId);
-                if (profile && savedAccessToken) this.setProfile(profile, savedAccessToken);
-                else if (profile) this.setProfile(profile);
+                try {
+                    const profiles = savedAccessToken ? await this.getProfiles(savedAccessToken) : await this.getProfiles();
+                    const profile = profiles.find((profile) => profile.id == savedProfileId);
+                    if (profile && savedAccessToken) this.setProfile(profile, savedAccessToken);
+                    else if (profile) this.setProfile(profile);
+                } catch (err) {
+                    if (axios.isAxiosError(err) && (err.response?.status == 401 || err.response?.status == 403)) {
+                        window.location.href = this.getLoginUrl().href;
+                    }
+                    console.error(err);
+                }
             }
         }
 
@@ -243,7 +249,9 @@ export default class API {
     public logout() {
         this.client = axios.create({ baseURL: this.baseURL });
         this._selectedProfile = undefined;
+        this._accessToken = undefined;
         localStorage.removeItem("profileId");
+        localStorage.removeItem("accessToken");
     }
 
     public getImageUrl(id: string | APIImage) {
@@ -262,12 +270,8 @@ export default class API {
     }
 
     public async getProfiles(accessToken?: string): Promise<Profile[]> {
-        if (accessToken) {
-            {
-                console.log("Requesting profiles with access token:", accessToken);
-                return (await this.client.get("/profiles", { headers: { Authorization: `Bearer ${accessToken}` } })).data;
-            }
-        } else return (await this.client.get("/profiles")).data;
+        if (accessToken) return (await this.client.get("/profiles", { headers: { Authorization: `Bearer ${accessToken}` } })).data;
+        else return (await this.client.get("/profiles")).data;
     }
 
     public async createProfile(profileName: string): Promise<Profile> {

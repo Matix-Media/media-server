@@ -102,9 +102,9 @@ onMounted(async () => {
                 artwork: props.watchableInfo.thumbnail ? [{ src: props.watchableInfo.thumbnail }] : undefined,
             });
 
-            navigator.mediaSession.setActionHandler("play", () => togglePlayState());
-            navigator.mediaSession.setActionHandler("pause", () => togglePlayState());
-            navigator.mediaSession.setActionHandler("stop", () => togglePlayState());
+            navigator.mediaSession.setActionHandler("play", () => play());
+            navigator.mediaSession.setActionHandler("pause", () => pause());
+            navigator.mediaSession.setActionHandler("stop", () => pause());
             if (props.watchableInfo.next) navigator.mediaSession.setActionHandler("nexttrack", () => next());
             navigator.mediaSession.setActionHandler("seekto", (details) => {
                 if (details.seekTime) video.value!.currentTime = details.seekTime;
@@ -286,6 +286,15 @@ function getThumbnail(second: number) {
     }
     return null;
 }
+
+function controlsPointerDown(event: PointerEvent) {
+    if (event.pointerType == "mouse") {
+        togglePlayState();
+    } else {
+        showControls();
+        hideControls();
+    }
+}
 // For more api info https://freshman.tech/custom-html5-video/
 </script>
 
@@ -295,7 +304,7 @@ function getThumbnail(second: number) {
             <p>Sorry, but your browser does not support MediaSource Extensions. <a href="http://w3c.github.io/media-source/">Find out more</a></p>
         </div>
         <video ref="video" v-if="isSupported" autoplay="true"></video>
-        <div class="controls" @click="togglePlayState()" @dblclick="toggleFullscreen()" :class="{ hidden: controlsHidden }">
+        <div class="controls" @pointerdown="controlsPointerDown" @dblclick="toggleFullscreen()" :class="{ hidden: controlsHidden }">
             <Transition name="fade-down">
                 <div class="top" v-if="!controlsHidden">
                     <Clickable v-if="props.back" @click.stop="back()" @dblclick.stop="">

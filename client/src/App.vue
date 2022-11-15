@@ -15,10 +15,7 @@ onMounted(async () => {
     try {
         await api.initialize();
     } catch (err) {
-        if (axios.isAxiosError(err) && (err.response?.status == 401 || err.response?.status == 403)) {
-            window.location.href = api.getLoginUrl().href;
-        }
-        console.error(err);
+        
     }
     loading.value = false;
 });
