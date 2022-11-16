@@ -71,7 +71,8 @@ onMounted(async () => {
     video.value.ontimeupdate = () => {
         elapsed.value = video.value!.currentTime;
         duration.value = video.value!.duration;
-        console.log("[Duration] Video reports:", video.value!.duration, "Vue says:", duration.value);
+        if (duration.value < 1) return;
+
         if (duration.value - elapsed.value < 10) {
             api.reportStreamProgress(streamInfo.id, duration.value, true);
         }
