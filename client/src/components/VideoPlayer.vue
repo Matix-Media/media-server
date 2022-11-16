@@ -162,7 +162,10 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
-    hls.destroy();
+    try {
+        screen.orientation.lock("portrait");
+    } catch {}
+    if (hls) hls.destroy();
     clearInterval(progressReportInterval);
     if (hasMediaSession && props.showControls) {
         navigator.mediaSession.playbackState = "none";
