@@ -6,7 +6,6 @@ import Icon from "src/components/Icon.vue";
 import Progress from "src/components/Progress.vue";
 import Clickable from "src/components/Clickable.vue";
 import { ref } from "vue";
-import { publicDecrypt } from "crypto";
 import { useTitle } from "@vueuse/core";
 
 const route = useRoute();
@@ -29,7 +28,12 @@ const firstEpisode =
 const fullDescription = ref(false);
 const fullDescriptions = ref<string[]>([]);
 if (show.movie_content) router.replace({ name: "Movie", params: { id: route.params.id } });
-if (progress) selectedSeason.value = progress.episode.season;
+if (progress)
+    for (const season of show.show_content!.seasons) {
+        for (const episode of season.episodes) {
+            if (episode.stream.progresses && episode.stream.progresses.find((i) => i.id == progress.id)) selectedSeason.value = season;
+        }
+    }
 
 useTitle(show.name, { titleTemplate: API.getTitleTemplate });
 </script>
