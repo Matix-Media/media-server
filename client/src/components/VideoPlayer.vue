@@ -57,7 +57,6 @@ onMounted(async () => {
     if (isMobile && props.showControls) {
         try {
             if (!fullscreen.value) toggleFullscreen();
-            screen.orientation.lock("portrait");
         } catch {}
     }
 
@@ -72,6 +71,7 @@ onMounted(async () => {
     video.value.ontimeupdate = () => {
         elapsed.value = video.value?.currentTime!;
         console.log("[Elapsed] Video reports:", video.value!.currentTime, "Vue says:", elapsed.value);
+        console.log("[Duration] Video reports:", video.value!.duration, "Vue says:", duration.value);
         if (duration.value - elapsed.value < 10) {
             api.reportStreamProgress(streamInfo.id, duration.value, true);
         }
@@ -166,7 +166,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
     try {
-        screen.orientation.lock("portrait");
+        screen.orientation.unlock();
     } catch {}
     if (hls) hls.destroy();
     clearInterval(progressReportInterval);
@@ -195,8 +195,13 @@ function togglePlayState() {
 
 async function toggleFullscreen() {
     try {
-        if (fullscreen.value) await document.exitFullscreen();
-        else await videoWrapper.value?.requestFullscreen();
+        if (fullscreen.value) {
+            await document.exitFullscreen();
+            screen.orientation.unlock();
+        } else {
+            await videoWrapper.value?.requestFullscreen();
+            await screen.orientation.lock("portrait");
+        }
         nextTick(() => {
             fullscreen.value = !fullscreen.value;
         });
