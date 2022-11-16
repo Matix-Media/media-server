@@ -371,6 +371,7 @@ function wholePlayerClick() {
                                 <Icon class="big-icon" icon="pause" v-else />
                             </Clickable>
                             <div
+                                v-if="!isMobile"
                                 class="volume-setting"
                                 @mouseenter="changingVolume = true"
                                 @mouseleave="
