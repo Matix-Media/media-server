@@ -13,7 +13,7 @@ export default class Season extends BaseEntity {
     season_number: number;
     @Column()
     air_date: string;
-    @Column()
+    @Column({ length: 1000 })
     description: string;
     @ManyToOne(() => Image)
     @JoinColumn()
