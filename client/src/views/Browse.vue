@@ -80,6 +80,7 @@ function navigate(watchable: Watchable & { progress: Progress[] }, watch: boolea
         height: 90vh;
         background-size: cover;
         background-position: center;
+        box-sizing: border-box;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -149,6 +150,41 @@ function navigate(watchable: Watchable & { progress: Progress[] }, watch: boolea
             height: 100%;
             background: radial-gradient(100% 100% at 0% 50%, rgba(24, 25, 41, 0.5) 0%, rgba(24, 25, 41, 0) 100%);
             z-index: 0;
+        }
+
+        @media (max-width: $mobile) {
+            justify-content: end;
+            align-items: center;
+            padding-bottom: 150px;
+            height: 70vh;
+
+            .logo {
+                max-width: 80%;
+            }
+
+            .logo-fallback {
+                max-width: 100%;
+                font-size: 36px;
+                text-align: center;
+            }
+
+            .description {
+                display: none;
+            }
+
+            .fade {
+                height: 300px;
+            }
+
+            .buttons {
+                .icon {
+                    font-size: 30px;
+                }
+
+                .watch {
+                    font: var(--font-20);
+                }
+            }
         }
     }
 

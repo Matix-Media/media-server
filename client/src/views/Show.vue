@@ -29,6 +29,7 @@ const firstEpisode =
 const fullDescription = ref(false);
 const fullDescriptions = ref<string[]>([]);
 if (show.movie_content) router.replace({ name: "Movie", params: { id: route.params.id } });
+if (progress) selectedSeason.value = progress.episode.season;
 
 useTitle(show.name, { titleTemplate: API.getTitleTemplate });
 </script>
@@ -151,6 +152,7 @@ useTitle(show.name, { titleTemplate: API.getTitleTemplate });
         .seasons {
             display: flex;
             align-items: center;
+            flex-wrap: wrap;
             gap: 20px;
 
             .season {
@@ -161,6 +163,12 @@ useTitle(show.name, { titleTemplate: API.getTitleTemplate });
                     @include glass;
                 }
             }
+
+            @media (max-width: $mobile) {
+                .season {
+                    font: var(--font-16);
+                }
+            }
         }
 
         .episodes {
@@ -169,6 +177,10 @@ useTitle(show.name, { titleTemplate: API.getTitleTemplate });
             display: flex;
             flex-direction: column;
             width: fit-content;
+
+            @media (max-width: $mobile) {
+                margin-top: 15px;
+            }
 
             .episode {
                 display: flex;
@@ -196,6 +208,10 @@ useTitle(show.name, { titleTemplate: API.getTitleTemplate });
                         background-position: center;
                         width: 230px;
                         margin-bottom: 20px;
+
+                        @media (max-width: $mobile) {
+                            width: 130px;
+                        }
                     }
 
                     &.has-progress .image {
@@ -204,6 +220,10 @@ useTitle(show.name, { titleTemplate: API.getTitleTemplate });
 
                     .progress {
                         width: 145px;
+
+                        @media (max-width: $mobile) {
+                            width: 90%;
+                        }
                     }
                 }
 
@@ -218,6 +238,23 @@ useTitle(show.name, { titleTemplate: API.getTitleTemplate });
                     h2 {
                         font: var(--font-20);
                         margin-bottom: 5px;
+                    }
+
+                    @media (max-width: $mobile) {
+                        margin-left: 15px;
+                        justify-content: normal;
+
+                        h2 {
+                            font: var(--font-16);
+                        }
+
+                        .duration {
+                            font: var(--font-12);
+                        }
+
+                        .description {
+                            display: none;
+                        }
                     }
 
                     .description {

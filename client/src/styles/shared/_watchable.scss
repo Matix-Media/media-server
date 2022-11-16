@@ -3,6 +3,7 @@
 
 @mixin watchable {
     position: relative;
+    margin-bottom: 50px;
 
     .hero {
         padding-top: 110px;
@@ -24,6 +25,8 @@
                 font-size: 48px;
             }
         }
+
+
 
 
         .quick-infos {
@@ -82,10 +85,34 @@
                 color: var(--white-50);
                 padding: 0;
             }
+
+            @media (max-width: $mobile) {
+
+                &,
+                .show-more {
+                    font: var(--font-12);
+                }
+            }
         }
 
         &.has-progress .description {
             margin-top: 10px;
+        }
+
+        @media (max-width: $mobile) {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+            .watch-options {
+                .watch {
+                    font: var(--font-20);
+
+                    .icon {
+                        font-size: 30px;
+                    }
+                }
+            }
         }
     }
 
@@ -118,6 +145,12 @@
             left: 0;
             top: 0;
             background: linear-gradient(90deg, #181929 0%, rgba(24, 25, 41, 0) 100%);
+
+            @media (max-width: $mobile) {
+                width: 100%;
+                background: rgba(24, 25, 41, 0.7);
+            }
         }
     }
+
 }

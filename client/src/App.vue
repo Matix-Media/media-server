@@ -14,9 +14,7 @@ const api = API.getInstance();
 onMounted(async () => {
     try {
         await api.initialize();
-    } catch (err) {
-        
-    }
+    } catch (err) {}
     loading.value = false;
 });
 
@@ -106,6 +104,13 @@ body {
 
     * {
         user-select: none;
+    }
+}
+
+@media (max-width: $mobile) {
+    html,
+    body {
+        overflow-x: hidden;
     }
 }
 </style>

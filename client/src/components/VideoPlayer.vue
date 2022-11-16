@@ -53,6 +53,13 @@ watch(playing, (value) => {
 onMounted(async () => {
     if (!isSupported || !video.value) return;
 
+    if (API.isMobile() && props.showControls) {
+        try {
+            screen.orientation.lock("portrait");
+            if (!fullscreen.value) toggleFullscreen();
+        } catch {}
+    }
+
     video.value.onplay = () => {
         playing.value = true;
     };

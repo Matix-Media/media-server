@@ -40,7 +40,7 @@
         "time": {
             "hoursAndMinutes": "{hours} hr. {minutes} min.",
             "minutes": "{minutes} min.",
-            "currentMinute": "0th min. | First min. | {minute}th min.",
+            "currentMinute": "0th min. | First min. | {count}th min.",
             "finished": "Finished"
         },
         "departments": {

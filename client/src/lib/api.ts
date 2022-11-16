@@ -139,6 +139,14 @@ export type MovieStreamInfo = Movie & { watchable: Watchable };
 export default class API {
     private static INSTANCE: API;
 
+    public static isMobile() {
+        return window.matchMedia(`(max-width: 450px)`).matches;
+    }
+
+    public static getSidePadding() {
+        return Number.parseInt(getComputedStyle(document.documentElement).getPropertyValue("--side-padding").split("px")[0]);
+    }
+
     public static getTitleTemplate(titleChunk?: string) {
         return titleChunk ? `${titleChunk} on Media Server` : "Media Server";
     }
@@ -153,13 +161,10 @@ export default class API {
 
         let latest: Progress = progress[0];
         for (const currentProgress of progress) {
-            console.log(currentProgress);
-            console.log(currentProgress.last_updates, ">", latest.last_updates);
             if (new Date(currentProgress.last_updates) > new Date(latest.last_updates)) {
                 latest = currentProgress;
             }
         }
-        console.log("Returned:", latest);
         return latest;
     }
 

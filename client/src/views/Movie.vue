@@ -51,7 +51,7 @@ useTitle(movie.name, { titleTemplate: API.getTitleTemplate });
             </div>
 
             <p class="description" v-if="progress">
-                {{ $t("details.time.currentMinute", { minute: Math.round(progress.second / 60) }) }}
+                {{ $t("details.time.currentMinute", Math.round(progress.second / 60)) }}
             </p>
             <p class="description" v-else-if="movie.description" :class="{ 'full-width': fullDescription }">
                 {{ movie.description.length > 100 && !fullDescription ? movie.description.substring(0, 97) + "..." : movie.description }}
@@ -139,6 +139,20 @@ useTitle(movie.name, { titleTemplate: API.getTitleTemplate });
 
         .names {
             max-width: 400px;
+        }
+
+        @media (max-width: $mobile) {
+            flex-direction: column;
+            font: var(--font-12);
+            gap: 20px;
+
+            .outer {
+                justify-content: normal;
+            }
+
+            .names {
+                width: 100%;
+            }
         }
     }
 }

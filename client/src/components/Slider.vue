@@ -7,6 +7,7 @@ import WatchablePlaceholder from "src/assets/images/watchable-placeholder.jpg";
 import * as uuid from "uuid";
 import Clickable from "./Clickable.vue";
 import Button from "./Button.vue";
+
 const props = defineProps<{ title: string; watchables: Array<Watchable & { progress: Progress[] }> }>();
 const router = useRouter();
 const api = API.getInstance();
@@ -22,7 +23,8 @@ const noTrailerAvailable = ref<string[]>([]);
 const sliderId = uuid.v4();
 const scrollLeftVisible = ref(false);
 const scrollRightVisible = ref(true);
-const sidePadding = Number.parseInt(getComputedStyle(document.documentElement).getPropertyValue("--side-padding").split("px")[0]);
+const sidePadding = API.getSidePadding();
+const isMobile = API.isMobile();
 
 function onSlideHoverEnter(watchable: Watchable) {
     if (hoveringLeaveTimeouts.value[watchable.id]) {
@@ -88,7 +90,7 @@ function getPercentage(progress: Progress) {
 }
 
 function getWatchableRoute(watchable: Watchable & { progress: Progress[] }) {
-    if (watchable.progress && watchable.progress.length > 0) {
+    if (watchable.progress && watchable.progress.length > 0 && !isMobile) {
         if (watchable.movie_content) return { name: "StreamMovie", params: { id: watchable.movie_content.id } };
         else return { name: "StreamEpisode", params: { id: API.getLatestProgress(watchable.progress)?.episode.id } };
     } else {
@@ -123,15 +125,19 @@ function scrollLeft() {
     slides.value.scroll({ left: slides.value.scrollLeft - document.body.clientWidth - sidePadding, behavior: "smooth" });
 }
 
-function slidePointerDown(event: PointerEvent, watchable: Watchable & { progress: Progress[] }) {
-    if (event.pointerType == "mouse") {
+function slidePointerDown(watchable: Watchable & { progress: Progress[] }) {
+    if (isMobile) {
         router.push(getWatchableRoute(watchable));
     } else {
-        if (hoveredSlide.value == watchable.id) {
-            router.push(getWatchableRoute(watchable));
-        } else {
-            onSlideHoverEnter(watchable);
-        }
+        router.push(getWatchableRoute(watchable));
+    }
+}
+
+function getSlideBackgroundImage(watchable: Watchable) {
+    if (isMobile) {
+        return watchable.poster ? api.getImageUrl(watchable.poster.id) : WatchablePlaceholder;
+    } else {
+        return watchable.backdrop ? api.getImageUrl(watchable.backdrop.id) : WatchablePlaceholder;
     }
 }
 
@@ -163,13 +169,13 @@ onMounted(() => {
                 :class="{ 'no-progress': !API.getLatestProgress(watchable.progress) }"
                 :id="'scroll-slide-' + watchable.id + '-' + sliderId"
             >
-                <div
+                <Clickable
                     class="image"
                     @click.prevent=""
-                    @pointerdown="(e: PointerEvent) => slidePointerDown(e, watchable)"
-                    @mouseenter="(event: MouseEvent) => onSlideHoverEnter(watchable)"
-                    @mouseleave="(event: MouseEvent) => onSlideHoverLeave(watchable)"
-                    :style="{ backgroundImage: 'url(' + (watchable.backdrop ? api.getImageUrl(watchable.backdrop.id) : WatchablePlaceholder) + ')' }"
+                    @click="slidePointerDown(watchable)"
+                    @mouseenter="onSlideHoverEnter(watchable)"
+                    @mouseleave="onSlideHoverLeave(watchable)"
+                    :style="{ backgroundImage: 'url(' + getSlideBackgroundImage(watchable) + ')' }"
                     :key="watchable.id"
                 >
                     <img class="logo" v-if="watchable.logo" :src="api.getImageUrl(watchable.logo.id)" :alt="watchable.name" />
@@ -230,7 +236,7 @@ onMounted(() => {
                             </div>
                         </div>
                     </Teleport>
-                </div>
+                </Clickable>
 
                 <div class="progress" v-if="watchable.progress.length > 0">
                     <div
@@ -286,6 +292,10 @@ onMounted(() => {
         font: var(--font-36);
         margin-bottom: 10px;
         margin-left: var(--side-padding);
+
+        @media (max-width: $mobile) {
+            font: var(--font-24);
+        }
     }
 
     .slides {
@@ -311,6 +321,12 @@ onMounted(() => {
             height: 0;
         }
 
+        @media (max-width: $mobile) {
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            grid-auto-columns: minmax(110px, 1fr);
+            gap: 10px;
+        }
+
         .slide {
             display: flex;
             flex-direction: column;
@@ -334,9 +350,15 @@ onMounted(() => {
                     background-color: var(--foreground);
                     border-radius: var(--border-radius);
                 }
+
+                @media (max-width: $mobile) {
+                    width: 80%;
+                }
             }
 
             .image {
+                --type: "card";
+                cursor: pointer;
                 position: relative;
                 background-size: cover;
                 background-position: center;
@@ -366,6 +388,20 @@ onMounted(() => {
                     font-size: 36px;
                     text-shadow: 0px 4px 3px rgb(0 0 0 / 40%), 0px 8px 13px rgb(0 0 0 / 10%), 0px 18px 23px rgb(0 0 0 / 10%);
                 }
+
+                @media (max-width: $mobile) {
+                    --type: "poster";
+                    aspect-ratio: 2 / 3;
+
+                    @supports not (aspect-ratio: 16 /9) {
+                        padding-bottom: 150%;
+                    }
+
+                    .logo,
+                    .fallback-logo {
+                        display: none;
+                    }
+                }
             }
         }
     }
@@ -383,6 +419,10 @@ onMounted(() => {
         margin: 0;
         font-size: 34px;
         background-color: rgba(var(--background-color-values), 0.7);
+
+        @media (max-width: $mobile) {
+            display: none;
+        }
 
         &:hover {
             background-color: rgba(var(--background-color-values), 0.75);
