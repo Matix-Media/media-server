@@ -27,6 +27,7 @@ let hls: Hls;
 const hasMediaSession = "mediaSession" in navigator;
 const api = API.getInstance();
 const streamInfo = await api.getStream(props.streamId);
+const isMobile = API.isMobile();
 let progressReportInterval: number;
 
 const hasHours = ref(true);
@@ -53,7 +54,7 @@ watch(playing, (value) => {
 onMounted(async () => {
     if (!isSupported || !video.value) return;
 
-    if (API.isMobile() && props.showControls) {
+    if (isMobile && props.showControls) {
         try {
             screen.orientation.lock("portrait");
             if (!fullscreen.value) toggleFullscreen();
@@ -305,11 +306,17 @@ function controlsPointerDown(event: PointerEvent) {
         hideControls();
     }
 }
+
+function wholePlayerClick() {
+    if (isMobile && props.showControls && !fullscreen) {
+        toggleFullscreen();
+    }
+}
 // For more api info https://freshman.tech/custom-html5-video/
 </script>
 
 <template>
-    <div class="video-player" ref="videoWrapper" @mouseup="skipMouseUp" @mousemove="videoPlayerMouseMove">
+    <div class="video-player" ref="videoWrapper" @mouseup="skipMouseUp" @mousemove="videoPlayerMouseMove" @click="wholePlayerClick">
         <div class="not-supported" v-if="!isSupported">
             <p>Sorry, but your browser does not support MediaSource Extensions. <a href="http://w3c.github.io/media-source/">Find out more</a></p>
         </div>
@@ -402,7 +409,7 @@ function controlsPointerDown(event: PointerEvent) {
                             <Clickable>
                                 <Icon class="big-icon" icon="subtitles" />
                             </Clickable>
-                            <Clickable @click="toggleFullscreen()">
+                            <Clickable @click="toggleFullscreen()" v-if="!isMobile">
                                 <Icon class="big-icon" icon="fullscreen" v-if="!fullscreen" />
                                 <Icon class="big-icon" icon="fullscreen_exit " v-else />
                             </Clickable>

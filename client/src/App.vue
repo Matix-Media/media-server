@@ -104,6 +104,7 @@ body {
 
     * {
         user-select: none;
+        -webkit-tap-highlight-color: transparent;
     }
 }
 
