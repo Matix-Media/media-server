@@ -69,8 +69,9 @@ onMounted(async () => {
     };
 
     video.value.ontimeupdate = () => {
-        elapsed.value = video.value?.currentTime!;
+        elapsed.value = video.value!.currentTime;
         duration.value = video.value!.duration;
+        console.log("[Duration] Video reports:", video.value!.duration, "Vue says:", duration.value);
         if (duration.value - elapsed.value < 10) {
             api.reportStreamProgress(streamInfo.id, duration.value, true);
         }
@@ -93,10 +94,6 @@ onMounted(async () => {
     video.value.onloadedmetadata = () => {
         duration.value = video.value!.duration;
         if (duration.value == 0) duration.value = 1;
-        nextTick(() => {
-            duration.value = video.value!.duration;
-            console.log("[Duration] Video reports:", video.value!.duration, "Vue says:", duration.value);
-        });
         if (dissectTime(video.value?.duration!).hours == 0) hasHours.value = false;
         if (streamInfo.progress) video.value!.currentTime = streamInfo.progress.second;
 
