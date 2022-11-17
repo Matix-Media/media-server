@@ -288,14 +288,19 @@ function next(asFinished = false) {
     router.push({ name: "StreamEpisode", params: { id: props.watchableInfo?.next }, query: { fullscreen: fullscreen.value ? 1 : undefined } });
 }
 
+function overControlElement() {
+    const elementsBelowMouse = document.querySelectorAll(":hover");
+    for (const element of Array.from(elementsBelowMouse)) {
+        if (element.classList.contains("big-icon") || element.classList.contains("progress") || element.classList.contains("volume-setting"))
+            return true;
+    }
+    return false;
+}
+
 function hideControls() {
     hideControlsTimeout.value = setTimeout(() => {
-        if (!playing.value || skippingMouseDown.value || changingVolumeMouseDown.value) return;
-        const elementsBelowMouse = document.querySelectorAll(":hover");
-        for (const element of Array.from(elementsBelowMouse)) {
-            if (element.classList.contains("big-icon") || element.classList.contains("progress") || element.classList.contains("volume-setting"))
-                return;
-        }
+        if (!playing.value || skippingMouseDown.value || changingVolumeMouseDown.value || overControlElement()) return;
+
         controlsHidden.value = true;
     }, 3000) as any as number;
 }
@@ -335,7 +340,7 @@ function getThumbnail(second: number) {
 
 function controlsPointerDown(event: PointerEvent) {
     if (event.pointerType == "mouse") {
-        togglePlayState();
+        if (!overControlElement()) togglePlayState();
     } else {
         showControls();
         hideControls();
