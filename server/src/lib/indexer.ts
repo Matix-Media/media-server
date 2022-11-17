@@ -48,7 +48,7 @@ export class Indexer {
     private server: MediaServer;
     private logger: Logger;
     private config: IndexerConfig;
-    private localAutoIndexCache: Record<string, NodeJS.Timeout> = {};
+    private localAutoIndexCache: Record<string, { size: bigint; timeout: NodeJS.Timeout }> = {};
     public indexQueue: QueueItem[] = [];
 
     constructor(server: MediaServer, config: IndexerConfig) {
@@ -90,16 +90,8 @@ export class Indexer {
 
         queueItem.running = true;
 
-        let indexLog = await IndexLog.findOneBy({ filepath: filePath });
-        if (indexLog) {
-            this.removeFromQueue(queueItem);
-            this.logger.debug(filePath, "already indexed, skipping");
-            this.executeNextInQueue();
-            return;
-        }
-
         this.logger.debug(filePath, "picked up, indexing");
-        indexLog = new IndexLog();
+        const indexLog = new IndexLog();
         indexLog.filepath = filePath;
         indexLog.indexing = true;
         await indexLog.save();
@@ -131,34 +123,43 @@ export class Indexer {
         this.executeNextInQueue();
     }
 
-    private async debounceIndex(filePath: string) {
-        if (this.localAutoIndexCache[filePath]) clearTimeout(this.localAutoIndexCache[filePath]);
+    private async debounceIndex(filePath: string, size: bigint) {
+        if (this.localAutoIndexCache[filePath] && this.localAutoIndexCache[filePath].size != size)
+            clearTimeout(this.localAutoIndexCache[filePath].timeout);
 
-        this.localAutoIndexCache[filePath] = setTimeout(() => {
-            this.localAutoIndexCache[filePath] = undefined;
-            this.triggerIndex(filePath);
-        }, 10000);
+        this.localAutoIndexCache[filePath] = {
+            size,
+            timeout: setTimeout(async () => {
+                const indexLog = await IndexLog.findOneBy({ filepath: filePath });
+                if (indexLog) {
+                    this.logger.debug(filePath, "already indexed, skipping");
+                    return;
+                }
+
+                this.localAutoIndexCache[filePath] = undefined;
+                this.triggerIndex(filePath);
+            }, 15000),
+        };
+    }
+
+    private async autoIndexRound() {
+        for (const currentFile of await file.getAllFilesRecursive(this.config.autoIndex.directory)) {
+            const filename = path.resolve(currentFile);
+            if ([".part", ".!qb", ".!ut"].includes(path.extname(filename).toLowerCase())) continue;
+
+            try {
+                const fileStats = await fs.stat(filename, { bigint: true });
+                this.debounceIndex(filename, fileStats.size);
+            } catch {}
+        }
+
+        setTimeout(() => this.autoIndexRound(), 10000);
     }
 
     public async autoIndex() {
         if (!this.config.autoIndex.enabled) return;
 
-        const watcher = chokidar.watch(this.config.autoIndex.directory, {
-            persistent: false,
-            usePolling: true,
-            ignored: ["*.part", "*.!qB", "*.!qb", "*.!ut"],
-        });
-        await new Promise((resolve) => watcher.on("ready", resolve));
-
-        for (const currentFile of await file.getAllFilesRecursive(this.config.autoIndex.directory)) this.debounceIndex(path.resolve(currentFile));
-
-        watcher.on("raw", async (event, filename, stats) => {
-            if (!["change", "rename"].includes(event)) return;
-            if (stats.isDirectory) return;
-            if (!(await file.fileExists(filename))) return;
-
-            this.debounceIndex(filename);
-        });
+        this.autoIndexRound();
     }
 
     public async indexFile(filePath: string, progressReport = (action: string, percentage: number) => {}): Promise<Watchable> {
