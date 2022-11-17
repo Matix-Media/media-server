@@ -122,7 +122,16 @@ onMounted(async () => {
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: props.watchableInfo.title,
                 album: props.watchableInfo.subtitle,
-                artwork: props.watchableInfo.thumbnail ? [{ src: props.watchableInfo.thumbnail }] : undefined,
+                artwork: props.watchableInfo.thumbnail
+                    ? [
+                          { src: props.watchableInfo.thumbnail, sizes: "96x96", type: "image/jpeg" },
+                          { src: props.watchableInfo.thumbnail, sizes: "128x128", type: "image/jpeg" },
+                          { src: props.watchableInfo.thumbnail, sizes: "192x192", type: "image/jpeg" },
+                          { src: props.watchableInfo.thumbnail, sizes: "256x256", type: "image/jpeg" },
+                          { src: props.watchableInfo.thumbnail, sizes: "384x384", type: "image/jpeg" },
+                          { src: props.watchableInfo.thumbnail, sizes: "512x512", type: "image/jpeg" },
+                      ]
+                    : undefined,
             });
 
             navigator.mediaSession.setActionHandler("play", () => play());
