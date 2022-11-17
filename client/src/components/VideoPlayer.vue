@@ -41,6 +41,7 @@ const seekPopupPosition = ref(0);
 const seeking = ref(false);
 const skippingMouseDown = ref(false);
 const skippingSeek = ref(0);
+const hasSkipped = ref(false);
 const volume = ref(1);
 const changingVolume = ref(false);
 const changingVolumeMouseDown = ref(false);
@@ -76,6 +77,16 @@ onMounted(async () => {
             return;
         }
 
+        if (
+            elapsed.value == 0 &&
+            props.watchableInfo?.next &&
+            !streamInfo.progress.finished &&
+            streamInfo.progress.second < Math.floor(duration.value) - 10 &&
+            !hasSkipped.value
+        ) {
+            video.value!.currentTime = streamInfo.progress.second;
+        }
+
         if (duration.value - elapsed.value < 10) {
             api.reportStreamProgress(streamInfo.id, duration.value, true);
         }
@@ -99,7 +110,6 @@ onMounted(async () => {
         duration.value = video.value!.duration;
         if (duration.value == 0) duration.value = 1;
         if (dissectTime(video.value?.duration!).hours == 0) hasHours.value = false;
-        if (streamInfo.progress) video.value!.currentTime = streamInfo.progress.second;
 
         play();
         hideControls();
@@ -231,6 +241,7 @@ function seek(event: MouseEvent) {
 }
 
 function skip() {
+    hasSkipped.value = true;
     video.value!.currentTime = seekPosition.value;
 }
 
