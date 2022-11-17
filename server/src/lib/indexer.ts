@@ -131,10 +131,7 @@ export class Indexer {
             size,
             timeout: setTimeout(async () => {
                 const indexLog = await IndexLog.findOneBy({ filepath: filePath });
-                if (indexLog) {
-                    this.logger.debug(filePath, "already indexed, skipping");
-                    return;
-                }
+                if (indexLog) return;
 
                 this.localAutoIndexCache[filePath] = undefined;
                 this.triggerIndex(filePath);
