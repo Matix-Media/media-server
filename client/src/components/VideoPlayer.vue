@@ -206,9 +206,7 @@ async function toggleFullscreen() {
             await videoWrapper.value?.requestFullscreen();
             await screen.orientation.lock("landscape");
         }
-        nextTick(() => {
-            fullscreen.value = !fullscreen.value;
-        });
+        fullscreen.value = !fullscreen.value;
     } catch (err) {
         // Catch fullscreen error
     }
