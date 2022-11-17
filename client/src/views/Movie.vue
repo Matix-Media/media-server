@@ -55,7 +55,7 @@ useTitle(movie.name, { titleTemplate: API.getTitleTemplate });
             </p>
             <p class="description" v-else-if="movie.description" :class="{ 'full-width': fullDescription }">
                 {{ movie.description.length > 100 && !fullDescription ? movie.description.substring(0, 97) + "..." : movie.description }}
-                <Clickable class="show-more" v-if="movie.description.length > 200 && !fullDescription" @click.prevent="fullDescription = true">
+                <Clickable class="show-more" v-if="movie.description.length > 100 && !fullDescription" @click.prevent="fullDescription = true">
                     {{ $t("details.more") }}
                 </Clickable>
             </p>
