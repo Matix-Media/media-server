@@ -231,10 +231,10 @@ async function toggleFullscreen() {
             await videoWrapper.value?.requestFullscreen();
             await screen.orientation.lock("landscape");
         }
-        fullscreen.value = !fullscreen.value;
     } catch (err) {
         // Catch fullscreen error
     }
+    fullscreen.value = !!document.fullscreenElement;
 }
 
 function back() {
