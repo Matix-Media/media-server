@@ -79,7 +79,6 @@ onMounted(async () => {
 
         if (
             elapsed.value == 0 &&
-            props.watchableInfo?.next &&
             !streamInfo.progress.finished &&
             streamInfo.progress.second < Math.floor(duration.value) - 10 &&
             !hasSkipped.value
