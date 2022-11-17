@@ -37,6 +37,10 @@ export default function (fastify: FastifyInstanceType, options: RegisterOptions,
     }
 
     fastify.get("/image/:id", { schema: { params: Type.Object({ id: Type.String({ format: "uuid" }) }) } }, async (req, res) => {
+        const cacheUntil = new Date();
+        cacheUntil.setDate(cacheUntil.getDate() + 186);
+        res.header("Cache-Control", "public, max-age=16070400");
+        res.header("Expires", cacheUntil.toUTCString());
         try {
             const image = await Image.findOneBy({ id: req.params.id });
             if (!image) {
