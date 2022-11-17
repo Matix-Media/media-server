@@ -78,12 +78,7 @@ onMounted(async () => {
             return;
         }
 
-        console.log("Elapsed:", elapsed.value);
-        console.log("Progress:", streamInfo.progress);
-        console.log("Time:", streamInfo.progress.second, "<", Math.floor(duration.value) - 10);
-        console.log("Skipped:", hasSkipped.value);
         if (elapsed.value < 1 && !streamInfo.progress.finished && streamInfo.progress.second < Math.floor(duration.value) - 10 && !hasSkipped.value) {
-            console.log("Going to time");
             video.value!.currentTime = streamInfo.progress.second;
             hasSkipped.value = true;
         }
@@ -111,6 +106,11 @@ onMounted(async () => {
         duration.value = video.value!.duration;
         if (duration.value == 0) duration.value = 1;
         if (dissectTime(video.value?.duration!).hours == 0) hasHours.value = false;
+
+        if (!streamInfo.progress.finished && streamInfo.progress.second < Math.floor(duration.value) - 10) {
+            video.value!.currentTime = streamInfo.progress.second;
+            hasSkipped.value = true;
+        }
 
         play();
         hideControls();
