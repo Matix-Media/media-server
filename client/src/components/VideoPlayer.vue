@@ -82,12 +82,7 @@ onMounted(async () => {
         console.log("Progress:", streamInfo.progress);
         console.log("Time:", streamInfo.progress.second, "<", Math.floor(duration.value) - 10);
         console.log("Skipped:", hasSkipped.value);
-        if (
-            elapsed.value == 0 &&
-            !streamInfo.progress.finished &&
-            streamInfo.progress.second < Math.floor(duration.value) - 10 &&
-            !hasSkipped.value
-        ) {
+        if (elapsed.value < 1 && !streamInfo.progress.finished && streamInfo.progress.second < Math.floor(duration.value) - 10 && !hasSkipped.value) {
             console.log("Going to time");
             video.value!.currentTime = streamInfo.progress.second;
             hasSkipped.value = true;
