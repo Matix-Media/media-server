@@ -118,9 +118,6 @@ onMounted(async () => {
             hasSkipped.value = true;
         }
 
-        play();
-        hideControls();
-
         progressReportInterval = setInterval(() => {
             if (!playing.value) return;
             api.reportStreamProgress(streamInfo.id, elapsed.value, duration.value - elapsed.value < 10);
@@ -150,6 +147,9 @@ onMounted(async () => {
                 if (details.seekTime) video.value!.currentTime = details.seekTime;
             });
         }
+
+        play();
+        hideControls();
     };
 
     window.onkeyup = (event) => {
