@@ -78,7 +78,13 @@ onMounted(async () => {
             return;
         }
 
-        if (elapsed.value < 1 && !streamInfo.progress.finished && streamInfo.progress.second < Math.floor(duration.value) - 10 && !hasSkipped.value) {
+        if (
+            elapsed.value < 1 &&
+            streamInfo.progress &&
+            !streamInfo.progress.finished &&
+            streamInfo.progress.second < Math.floor(duration.value) - 10 &&
+            !hasSkipped.value
+        ) {
             video.value!.currentTime = streamInfo.progress.second;
             hasSkipped.value = true;
         }
@@ -107,7 +113,7 @@ onMounted(async () => {
         if (duration.value == 0) duration.value = 1;
         if (dissectTime(video.value?.duration!).hours == 0) hasHours.value = false;
 
-        if (!streamInfo.progress.finished && streamInfo.progress.second < Math.floor(duration.value) - 10) {
+        if (streamInfo.progress && !streamInfo.progress.finished && streamInfo.progress.second < Math.floor(duration.value) - 10) {
             video.value!.currentTime = streamInfo.progress.second;
             hasSkipped.value = true;
         }
