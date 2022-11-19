@@ -206,7 +206,9 @@ header {
                 top: calc(100% + 10px);
                 right: 0;
                 width: max-content;
-                @include glass;
+                background-color: var(--background);
+                border-radius: var(--border-radius);
+                box-shadow: var(--glass);
                 display: flex;
                 flex-direction: column;
                 overflow: hidden;
