@@ -38,7 +38,11 @@ function navigate(watchable: Watchable & { progress: Progress[] }, watch: boolea
             <img class="logo" v-if="browse.billboard.logo" :src="api.getImageUrl(browse.billboard.logo.id)" alt="" />
             <h1 v-else class="logo-fallback">{{ browse.billboard.name }}</h1>
             <p class="description">
-                {{ browse.billboard.description }}
+                {{
+                    browse.billboard.description!.length > 250
+                        ? browse.billboard.description!.substring(0, 247) + "..."
+                        : browse.billboard.description
+                }}
             </p>
             <div class="buttons">
                 <Button class="info" @click="navigate(browse.billboard, false)">
