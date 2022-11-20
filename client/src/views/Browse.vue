@@ -55,7 +55,11 @@ function navigate(watchable: Watchable & { progress: Progress[] }, watch: boolea
             <div class="circle-fade"></div>
         </div>
         <div class="sliders">
-            <Slider :title="$t('browse.sliders.' + slider.type)" v-for="slider in browse.sliders" :watchables="slider.slides" />
+            <Slider
+                :title="$t('browse.sliders.' + slider.type, { genre: slider.genre ? slider.genre.name : undefined })"
+                v-for="slider in browse.sliders"
+                :watchables="slider.slides"
+            />
             <div
                 class="background"
                 :style="{
@@ -91,6 +95,7 @@ function navigate(watchable: Watchable & { progress: Progress[] }, watch: boolea
 
         .logo {
             max-width: 375px;
+            max-height: 200px;
             z-index: 1;
         }
 

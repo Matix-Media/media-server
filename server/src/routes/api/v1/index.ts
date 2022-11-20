@@ -11,8 +11,9 @@ import Image from "../../../entities/image";
 import { TMDBModel } from "../../../lib/tmdb";
 import Episode from "../../../entities/episode";
 import Movie from "../../../entities/movie";
-import { randomUUID } from "crypto";
+import { generateKey, randomUUID } from "crypto";
 import axios, { AxiosResponse } from "axios";
+import Genre from "../../../entities/genre";
 
 const authStateCache: Record<string, { redirectUri: string }> = {};
 
@@ -350,13 +351,35 @@ export default function (fastify: FastifyInstanceType, options: RegisterOptions,
                     .getMany()
             ).sort((a, b) => 0.5 - Math.random());
 
-            /*const popularWatchables = (
-                await Watchable.find({ order: { rating: "DESC" }, take: 20, relations: { progress: { stream: true, movie: true, episode: true } } })
-            ).sort((a, b) => 0.5 - Math.random());*/
+            const randomGenres = await Genre.createQueryBuilder().select().orderBy("RAND()").take(10).getMany();
+
+            const watchablesByGenres = await Watchable.createQueryBuilder("watchable")
+                .setParameter("profileId", profile.id)
+                .leftJoinAndSelect("watchable.genres", "genre")
+                .leftJoinAndSelect("watchable.poster", "poster")
+                .leftJoinAndSelect("watchable.backdrop", "backdrop")
+                .leftJoinAndSelect("watchable.logo", "logo")
+                .leftJoinAndSelect("watchable.show_content", "show_content")
+                .leftJoinAndSelect("watchable.movie_content", "movie_content")
+                .leftJoinAndSelect("watchable.progress", "progress", "progress.profileId = :profileId")
+                .leftJoinAndSelect("progress.stream", "stream")
+                .leftJoinAndSelect("progress.episode", "progressEpisode")
+                .select()
+                .where("genre.id IN (:...genres)", { genres: randomGenres.map((genre) => genre.id) })
+                .take(200)
+                .getMany();
+
+            const genreOrderedWatchables: { genre: Genre; watchables: Watchable[] }[] = [];
+
+            for (const genre of randomGenres) {
+                const watchables = watchablesByGenres.filter((watchable) => watchable.genres.map((_genre) => _genre.id).includes(genre.id));
+                genreOrderedWatchables.push({ genre, watchables });
+            }
 
             const sliders = [
                 { type: "new", slides: newWatchables },
                 { type: "popular", slides: popularWatchables },
+                ...genreOrderedWatchables.map((slider) => ({ type: "genre", genre: slider.genre, slides: slider.watchables })),
             ];
 
             return {
@@ -377,15 +400,79 @@ export default function (fastify: FastifyInstanceType, options: RegisterOptions,
             },
         },
         async (req, res) => {
-            const results = await Watchable.createQueryBuilder("watchable")
-                .select()
+            let hasDirectResults = true;
+            let results = await Watchable.createQueryBuilder("watchable")
                 .setParameter("query", req.query.query)
-                .where("MATCH(watchable.name) AGAINST(:query IN BOOLEAN MODE)")
-                .where("MATCH(watchable.description) AGAINST(:query IN BOOLEAN MODE)")
+                .setParameter("threshold", 0)
+                .select([
+                    "*",
+                    "MATCH(watchable.name) AGAINST(:query) AS name_relevance",
+                    "MATCH(watchable.description) AGAINST(:query) AS description_relevance",
+                ])
+                .where("MATCH(watchable.name) AGAINST(:query) > :threshold")
+                .orWhere("MATCH(watchable.description) AGAINST(:query) > :threshold")
+                .orderBy("name_relevance", "DESC")
+                .addOrderBy("description_relevance", "DESC")
                 .take(20)
-                .getMany();
+                .getRawMany<{ id: string; type: "movie" | "show"; name: string; tmdb_id?: number }>();
 
-            return results;
+            /*
+            NOTE: This is some code for advanced smart-search. I decided against it because it takes much longer to take when using it,
+                  because the external TMDB API has to be called multiple times. Also, this could be limited by a Request Limit from TMDB.
+
+
+            if (results.length == 0) {
+                hasDirectResults = false;
+                const tmdbResults = (await fastify.mediaServer.server.tmdb.multiSearch(req.query.query)).results.filter((result) =>
+                    ["movie", "tv"].includes(result.media_type),
+                );
+                results = tmdbResults.map((result) => ({
+                    id: result.id.toString(),
+                    type: result.media_type == "movie" ? "movie" : "show",
+                    name: result.media_type == "movie" ? result.title : result.name,
+                    tmdb_id: result.id,
+                }));
+            }
+
+            const similarResults: { based_on: string; results: Watchable[] }[] = [];
+
+            for (const result of results) {
+                if (result.type == "movie") {
+                    const similar = (await fastify.mediaServer.server.tmdb.getSimilarMovies(result.tmdb_id)).results.filter(
+                        (_result) => _result.id != result.tmdb_id,
+                    );
+                    const similarFromDB = await Watchable.createQueryBuilder()
+                        .where("tmdb_id IN (:...ids)", {
+                            ids: similar.map((_similar) => _similar.id),
+                        })
+                        .select()
+                        .take(20)
+                        .getMany();
+                    similarResults.push({ based_on: result.name, results: similarFromDB });
+                } else {
+                    const similar = (await fastify.mediaServer.server.tmdb.getSimilarShows(result.tmdb_id)).results.filter(
+                        (_result) => _result.id != result.tmdb_id,
+                    );
+                    const similarFromDB = await Watchable.createQueryBuilder()
+                        .where("tmdb_id IN (:...ids)", {
+                            ids: similar.map((_similar) => _similar.id),
+                        })
+                        .select()
+                        .take(20)
+                        .getMany();
+                    similarResults.push({ based_on: result.name, results: similarFromDB });
+                }
+            }
+
+            const finalResults: { id: string; type: "movie" | "show"; name: string; tmdb_id?: number }[] = hasDirectResults ? results : [];
+            for (const similarResult of similarResults) {
+                for (const result of similarResult.results) {
+                    if (finalResults.find((_result) => _result.id == result.id)) continue;
+                    finalResults.push(result);
+                }
+            }
+            */
+            return res.send(results);
         },
     );
 

@@ -87,6 +87,73 @@ export interface MovieSearchResult {
     }[];
 }
 
+export interface MultiSearchResult {
+    page: number;
+    total_results: number;
+    total_pages: number;
+    results: {
+        id: number;
+        media_type: "tv" | "movie" | "person";
+        adult: boolean;
+        overview: string;
+        release_date: string;
+        genre_ids: number[];
+        original_title: string;
+        original_language: string;
+        title?: string;
+        name?: string;
+        popularity: number;
+        vote_count: number;
+        vote_average: number;
+        video: boolean;
+        poster_path?: string;
+        backdrop_path?: string;
+    }[];
+}
+
+export interface SimilarMoviesResult {
+    page: number;
+    total_results: number;
+    total_pages: number;
+    results: {
+        id: number;
+        adult: boolean;
+        overview: string;
+        release_date: string;
+        genre_ids: number[];
+        original_title: string;
+        original_language: string;
+        title: string;
+        popularity: number;
+        vote_count: number;
+        vote_average: number;
+        video: boolean;
+        poster_path?: string;
+        backdrop_path?: string;
+    }[];
+}
+
+export interface SimilarShowsResult {
+    page: number;
+    total_results: number;
+    total_pages: number;
+    results: {
+        id: number;
+        name: string;
+        original_name: string;
+        origin_country: string[];
+        original_language: string;
+        first_air_date: string;
+        overview: string;
+        genre_ids: number[];
+        popularity: number;
+        vote_average: number;
+        vote_count: number;
+        poster_path?: string;
+        backdrop_path?: string;
+    }[];
+}
+
 export interface ShowResult {
     id: number;
     name: string;
@@ -363,10 +430,13 @@ export class TMDB {
         search: {
             tvShows: {},
             movies: {},
+            multi: {},
         },
         tvShows: {},
         tvShowSeasons: {},
+        similarTvShows: {},
         movies: {},
+        similarMovies: {},
         trailer: {},
         contentRatings: {},
     };
@@ -409,6 +479,15 @@ export class TMDB {
         const res = await this.client.get("/search/movie", { params: { query, page } });
         if (!this.cache.search.movies[query]) this.cache.search.movies[query] = {};
         this.cache.search.movies[query][page] = res.data;
+        return res.data;
+    }
+
+    public async multiSearch(query: string, page = 1): Promise<MultiSearchResult> {
+        assert.ok(page > 0, "Page needs to be greater than 0");
+        if (this.cache.search.multi[query] && this.cache.search.multi[query][page]) return this.cache.search.multi[query][page];
+        const res = await this.client.get("/search/multi", { params: { query, page } });
+        if (!this.cache.search.multi[query]) this.cache.search.multi[query] = {};
+        this.cache.search.multi[query][page] = res.data;
         return res.data;
     }
 
@@ -469,5 +548,23 @@ export class TMDB {
             }
         }
         return null;
+    }
+
+    public async getSimilarMovies(id: number, page = 1): Promise<SimilarMoviesResult> {
+        assert.ok(page > 0, "Page needs to be greater than 0");
+        if (this.cache.similarMovies[id] && this.cache.similarMovies[id][page]) return this.cache.similarMovies[id][page];
+        const res = await this.client.get("/movie/" + id + "/similar", { params: { page } });
+        if (!this.cache.similarMovies[id]) this.cache.similarMovies[id] = {};
+        this.cache.similarMovies[id][page] = res.data;
+        return res.data;
+    }
+
+    public async getSimilarShows(id: number, page = 1): Promise<SimilarShowsResult> {
+        assert.ok(page > 0, "Page needs to be greater than 0");
+        if (this.cache.similarTvShows[id] && this.cache.similarTvShows[id][page]) return this.cache.similarTvShows[id][page];
+        const res = await this.client.get("/tv/" + id + "/similar", { params: { page } });
+        if (!this.cache.similarTvShows[id]) this.cache.similarTvShows[id] = {};
+        this.cache.similarTvShows[id][page] = res.data;
+        return res.data;
     }
 }

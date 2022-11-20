@@ -26,8 +26,14 @@
         "sliders": {
             "new": "New",
             "popular": "Popular",
-            "continue": "Continue"
+            "continue": "Continue",
+            "genre": "{genre}"
         }
+    },
+    "search": {
+        "matches": "Top-Results",
+        "similarTo": "Similar to {name}",
+        "genre": "{genre}"
     },
     "details": {
         "seasons": "0 Seasons | 1 Season | {count} Seasons",

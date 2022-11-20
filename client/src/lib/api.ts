@@ -76,7 +76,8 @@ export interface Watchable {
 export interface Browse {
     billboard: Watchable & { progress: Progress[] };
     sliders: {
-        type: string;
+        type: "new" | "popular" | "genre";
+        genre?: Genre;
         slides: Array<Watchable & { progress: Progress[] }>;
     }[];
 }
