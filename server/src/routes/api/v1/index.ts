@@ -396,12 +396,12 @@ export default function (fastify: FastifyInstanceType, options: RegisterOptions,
             schema: {
                 querystring: Type.Object({
                     query: Type.String(),
+                    page: Type.Number({ minimum: 0, default: 0 }),
                 }),
             },
         },
         async (req, res) => {
-            let hasDirectResults = true;
-            let results = await Watchable.createQueryBuilder("watchable")
+            const results = await Watchable.createQueryBuilder("watchable")
                 .setParameter("query", req.query.query)
                 .setParameter("threshold", 0)
                 .select([
@@ -413,65 +413,10 @@ export default function (fastify: FastifyInstanceType, options: RegisterOptions,
                 .orWhere("MATCH(watchable.description) AGAINST(:query) > :threshold")
                 .orderBy("name_relevance", "DESC")
                 .addOrderBy("description_relevance", "DESC")
+                .skip(req.query.page * 20)
                 .take(20)
                 .getRawMany<{ id: string; type: "movie" | "show"; name: string; tmdb_id?: number }>();
 
-            /*
-            NOTE: This is some code for advanced smart-search. I decided against it because it takes much longer to take when using it,
-                  because the external TMDB API has to be called multiple times. Also, this could be limited by a Request Limit from TMDB.
-
-
-            if (results.length == 0) {
-                hasDirectResults = false;
-                const tmdbResults = (await fastify.mediaServer.server.tmdb.multiSearch(req.query.query)).results.filter((result) =>
-                    ["movie", "tv"].includes(result.media_type),
-                );
-                results = tmdbResults.map((result) => ({
-                    id: result.id.toString(),
-                    type: result.media_type == "movie" ? "movie" : "show",
-                    name: result.media_type == "movie" ? result.title : result.name,
-                    tmdb_id: result.id,
-                }));
-            }
-
-            const similarResults: { based_on: string; results: Watchable[] }[] = [];
-
-            for (const result of results) {
-                if (result.type == "movie") {
-                    const similar = (await fastify.mediaServer.server.tmdb.getSimilarMovies(result.tmdb_id)).results.filter(
-                        (_result) => _result.id != result.tmdb_id,
-                    );
-                    const similarFromDB = await Watchable.createQueryBuilder()
-                        .where("tmdb_id IN (:...ids)", {
-                            ids: similar.map((_similar) => _similar.id),
-                        })
-                        .select()
-                        .take(20)
-                        .getMany();
-                    similarResults.push({ based_on: result.name, results: similarFromDB });
-                } else {
-                    const similar = (await fastify.mediaServer.server.tmdb.getSimilarShows(result.tmdb_id)).results.filter(
-                        (_result) => _result.id != result.tmdb_id,
-                    );
-                    const similarFromDB = await Watchable.createQueryBuilder()
-                        .where("tmdb_id IN (:...ids)", {
-                            ids: similar.map((_similar) => _similar.id),
-                        })
-                        .select()
-                        .take(20)
-                        .getMany();
-                    similarResults.push({ based_on: result.name, results: similarFromDB });
-                }
-            }
-
-            const finalResults: { id: string; type: "movie" | "show"; name: string; tmdb_id?: number }[] = hasDirectResults ? results : [];
-            for (const similarResult of similarResults) {
-                for (const result of similarResult.results) {
-                    if (finalResults.find((_result) => _result.id == result.id)) continue;
-                    finalResults.push(result);
-                }
-            }
-            */
             return res.send(results);
         },
     );
