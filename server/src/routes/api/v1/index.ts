@@ -18,7 +18,7 @@ import Genre from "../../../entities/genre";
 const authStateCache: Record<string, { redirectUri: string }> = {};
 
 export default function (fastify: FastifyInstanceType, options: RegisterOptions, done: Function) {
-    async function authPreHandler(request: FastifyRequest, reply: FastifyReply) {
+    async function authPreHandler(request: FastifyRequest, reply: FastifyReply, requiresAdmin = false) {
         const authConfig = fastify.mediaServer.server.authConfig;
         if (!authConfig.enabled) return;
         if (!request.headers.authorization) throw new Unauthorized("No authorization header present");
@@ -35,6 +35,12 @@ export default function (fastify: FastifyInstanceType, options: RegisterOptions,
         const sub = payload.sub;
 
         if (request.headers["x-profile"] && request.headers["x-profile"] != sub) throw new Unauthorized("Mismatch of token sub and profile id");
+
+        if (requiresAdmin) {
+            const profile = await Profile.findOneBy({ id: sub });
+            if (!profile) throw new Unauthorized("Profile not found");
+            if (!profile.is_admin) throw new Unauthorized("Action requires administrative permissions");
+        }
     }
 
     fastify.get("/image/:id", { schema: { params: Type.Object({ id: Type.String({ format: "uuid" }) }) } }, async (req, res) => {
@@ -52,7 +58,7 @@ export default function (fastify: FastifyInstanceType, options: RegisterOptions,
             }
 
             res.header("Content-Type", image.type || "image/jpeg");
-            return res.send(await image.getContent(fastify.mediaServer.server));
+            return res.send(await image.getData(fastify.mediaServer.server));
         } catch (err) {
             fastify.mediaServer.server.logger.error(err);
             res.header("Content-Type", "image/svg+xml");
@@ -158,6 +164,39 @@ export default function (fastify: FastifyInstanceType, options: RegisterOptions,
             if (!episode) throw new NotFound();
 
             return res.send(episode);
+        },
+    );
+
+    fastify.delete(
+        "/show/episode/:id",
+        {
+            preHandler: async (req, rep) => await authPreHandler(req, rep, true),
+            schema: { params: Type.Object({ id: Type.String({ format: "uuid" }) }) },
+        },
+        async (req, res) => {
+            const episode = await Episode.findOne({
+                where: { id: req.params.id },
+                relations: { stream: { parts: true, thumbnails: { image: true } } },
+            });
+            if (!episode) throw new NotFound();
+
+            const deletions: Promise<unknown>[] = [];
+            for (const streamPart of episode.stream.parts) {
+                deletions.push(streamPart.removeCompletely(fastify.mediaServer.server));
+            }
+            for (const thumbnail of episode.stream.thumbnails) {
+                deletions.push(
+                    (async () => {
+                        await thumbnail.image.removeCompletely(fastify.mediaServer.server);
+                        await thumbnail.remove();
+                    })(),
+                );
+            }
+            await Promise.all(deletions);
+
+            await episode.stream.remove();
+
+            await episode.remove();
         },
     );
 
@@ -404,20 +443,85 @@ export default function (fastify: FastifyInstanceType, options: RegisterOptions,
             const results = await Watchable.createQueryBuilder("watchable")
                 .setParameter("query", req.query.query)
                 .setParameter("threshold", 0)
+                .leftJoinAndSelect("watchable.poster", "poster")
+                .leftJoinAndSelect("watchable.backdrop", "backdrop")
+                .leftJoinAndSelect("watchable.logo", "logo")
+                .leftJoinAndSelect("watchable.show_content", "show_content")
+                .leftJoinAndSelect("watchable.movie_content", "movie_content")
                 .select([
-                    "*",
+                    "watchable.*",
+                    "poster.id as posterId",
+                    "poster.type as posterType",
+                    "poster.source as posterSource",
+                    "poster.created_on as posterCreatedOn",
+                    "backdrop.id as backdropId",
+                    "backdrop.type as backdropType",
+                    "backdrop.source as backdropSource",
+                    "backdrop.created_on as backdropCreatedOn",
+                    "logo.id as logoId",
+                    "logo.type as logoType",
+                    "logo.source as logoSource",
+                    "logo.created_on as logoCreatedOn",
                     "MATCH(watchable.name) AGAINST(:query) AS name_relevance",
                     "MATCH(watchable.description) AGAINST(:query) AS description_relevance",
                 ])
+
                 .where("MATCH(watchable.name) AGAINST(:query) > :threshold")
                 .orWhere("MATCH(watchable.description) AGAINST(:query) > :threshold")
                 .orderBy("name_relevance", "DESC")
                 .addOrderBy("description_relevance", "DESC")
                 .skip(req.query.page * 20)
                 .take(20)
-                .getRawMany<{ id: string; type: "movie" | "show"; name: string; tmdb_id?: number }>();
+                .getRawMany<{
+                    id: string;
+                    type: "movie" | "show";
+                    name: string;
+                    tmdb_id?: number;
+                    posterId?: string;
+                    posterType?: string;
+                    posterSource?: string;
+                    posterCreatedOn?: string;
+                    backdropId?: string;
+                    backdropType?: string;
+                    backdropSource?: string;
+                    backdropCreatedOn?: string;
+                    logoId?: string;
+                    logoType?: string;
+                    logoSource?: string;
+                    logoCreatedOn?: string;
+                }>();
 
-            return res.send(results);
+            return res.send(
+                results.map((result) => ({
+                    ...result,
+                    posterId: undefined,
+                    posterType: undefined,
+                    posterSource: undefined,
+                    posterCreatedOn: undefined,
+                    backdropId: undefined,
+                    backdropType: undefined,
+                    backdropSource: undefined,
+                    backdropCreatedOn: undefined,
+                    logoId: undefined,
+                    logoType: undefined,
+                    logoSource: undefined,
+                    logoCreatedOn: undefined,
+                    poster: result.posterId
+                        ? { id: result.posterId, type: result.posterType, source: result.posterSource, created_on: result.posterCreatedOn }
+                        : null,
+                    backdrop: result.backdropId
+                        ? {
+                              id: result.backdropId,
+                              type: result.backdropType,
+                              source: result.backdropSource,
+                              created_on: result.backdropCreatedOn,
+                          }
+                        : null,
+                    logo: result.logoId
+                        ? { id: result.logoId, type: result.logoType, source: result.logoSource, created_on: result.logoCreatedOn }
+                        : null,
+                })),
+            );
         },
     );
 
