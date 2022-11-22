@@ -88,10 +88,14 @@ export class Indexer {
 
         if (this.isQueueRunning()) return;
 
-        const existingIndexLog = await IndexLog.findOneBy({ filepath: filePath });
-        if (existingIndexLog) return;
-
         queueItem.running = true;
+
+        const existingIndexLog = await IndexLog.findOneBy({ filepath: filePath });
+        if (existingIndexLog) {
+            this.removeFromQueue(queueItem);
+            this.executeNextInQueue();
+            return;
+        }
 
         this.logger.debug(filePath, "picked up, indexing");
         const indexLog = new IndexLog();
