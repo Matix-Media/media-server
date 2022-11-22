@@ -23,6 +23,8 @@ export default class Stream extends BaseEntity {
     @OneToOne(() => StreamPart)
     @JoinColumn()
     first_part: Relation<StreamPart>;
+    @OneToMany(() => StreamPart, (streamPart) => streamPart.stream)
+    parts: Relation<StreamPart[]>;
     @OneToMany(() => Thumbnail, (thumbnail) => thumbnail.stream)
     thumbnails: Relation<Thumbnail[]>;
     @OneToMany(() => Progress, (progress) => progress.stream)
@@ -163,6 +165,8 @@ export default class Stream extends BaseEntity {
 
             let masterPlaylist = await fs.readFile(path.join(tempDirectory, "master.m3u8"), { encoding: "utf8" });
 
+            const streamParts: StreamPart[] = [];
+
             for (const qualityLevel of qualityLevels) {
                 const playlistPart = new StreamPart();
                 playlistPart.playlist = true;
@@ -179,6 +183,7 @@ export default class Stream extends BaseEntity {
                     const streamPart = new StreamPart();
                     streamPart.has_subtitles = false;
                     await streamPart.save();
+                    streamParts.push(streamPart);
 
                     const streamPartPath = path.join(tempDirectory, stream);
                     const targetPath = path.join(await server.getSaveDirectory("video"), streamPart.id + ".ts");
@@ -206,6 +211,7 @@ export default class Stream extends BaseEntity {
             const stream = new Stream();
             stream.duration = inputInfo.format.duration;
             stream.first_part = masterPlaylistPart;
+            stream.parts = streamParts;
             await stream.save();
 
             server.mediaToolLogger.debug(`Successfully generated hls for "${filePath}"`);

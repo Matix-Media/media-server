@@ -8,4 +8,6 @@ export default class Profile extends BaseEntity {
     name: string;
     @Column({ nullable: true })
     auth_provider_id?: string;
+    @Column({ default: false })
+    is_admin: boolean;
 }

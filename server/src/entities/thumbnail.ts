@@ -76,7 +76,7 @@ export default class Thumbnail extends BaseEntity {
                                     image.type = "image/jpeg";
                                     await image.save();
 
-                                    await fs.copyFile(path.join(tempDirectory, filename), await image.getLocation(server));
+                                    await fs.copyFile(path.join(tempDirectory, filename), await image.getPath(server));
 
                                     // Save thumbnail information in database
                                     const thumbnail = new Thumbnail();

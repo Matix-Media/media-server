@@ -180,6 +180,8 @@ export default function (fastify: FastifyInstanceType, options: RegisterOptions,
             });
             if (!episode) throw new NotFound();
 
+            await episode.remove();
+
             const deletions: Promise<unknown>[] = [];
             for (const streamPart of episode.stream.parts) {
                 deletions.push(streamPart.removeCompletely(fastify.mediaServer.server));
@@ -187,16 +189,14 @@ export default function (fastify: FastifyInstanceType, options: RegisterOptions,
             for (const thumbnail of episode.stream.thumbnails) {
                 deletions.push(
                     (async () => {
-                        await thumbnail.image.removeCompletely(fastify.mediaServer.server);
                         await thumbnail.remove();
+                        await thumbnail.image.removeCompletely(fastify.mediaServer.server);
                     })(),
                 );
             }
             await Promise.all(deletions);
 
             await episode.stream.remove();
-
-            await episode.remove();
         },
     );
 

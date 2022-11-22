@@ -28,6 +28,7 @@ import Ajv from "ajv";
 import IndexLog from "./entities/indexLog";
 import { readFileSync } from "fs";
 import fastifyJwt from "@fastify/jwt";
+import { mysqlLevenshteinFunction } from "./lib/mysqlLevenshtein";
 
 declare module "fastify" {
     export interface FastifyInstance {
@@ -175,6 +176,7 @@ export class MediaServer {
     public async boot() {
         this.logger.debug("Booting media server...");
         await this.dataSource.initialize();
+        //await this.dataSource.query(mysqlLevenshteinFunction);
         const addr = await this.webServer.listen({ port: this.port, host: this.host });
         this.indexer.autoIndex();
         this.logger.debug("Media server booted successfully, reachable through " + addr);

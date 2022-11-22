@@ -20,14 +20,23 @@ export default class Image extends BaseEntity {
     @CreateDateColumn()
     created_on: Date;
 
-    public async getLocation(server: MediaServer) {
+    public async getPath(server: MediaServer) {
         const saveDirectory = await server.getSaveDirectory("image");
         const extension = this.type ? mimeTypes.extension(this.type) || "jpg" : "jpg";
         return path.join(saveDirectory, this.id + "." + extension);
     }
 
-    public async getContent(server: MediaServer) {
-        return await fs.readFile(await this.getLocation(server));
+    public async getData(server: MediaServer) {
+        return await fs.readFile(await this.getPath(server));
+    }
+
+    public async removeCompletely(server: MediaServer) {
+        try {
+            await fs.rm(await this.getPath(server));
+        } catch (err) {
+            server.mediaToolLogger.warn(`Error removing image[${this.id}]: ${err}`);
+        }
+        await this.remove();
     }
 
     public static async fromURL(server: MediaServer, imageUrl: string) {
