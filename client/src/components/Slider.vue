@@ -8,7 +8,7 @@ import * as uuid from "uuid";
 import Clickable from "./Clickable.vue";
 import Button from "./Button.vue";
 
-const props = defineProps<{ title: string; watchables: Array<Watchable & { progress: Progress[] }> }>();
+const props = defineProps<{ title: string; watchables: Array<Watchable & { progress?: Progress[] }> }>();
 const router = useRouter();
 const api = API.getInstance();
 const slides = ref<HTMLDivElement>();
@@ -89,7 +89,7 @@ function getPercentage(progress: Progress) {
     return (progress.second / progress.stream.duration) * 100;
 }
 
-function getWatchableRoute(watchable: Watchable & { progress: Progress[] }) {
+function getWatchableRoute(watchable: Watchable & { progress?: Progress[] }) {
     if (watchable.progress && watchable.progress.length > 0 && !isMobile) {
         if (watchable.movie_content) return { name: "StreamMovie", params: { id: watchable.movie_content.id } };
         else return { name: "StreamEpisode", params: { id: API.getLatestProgress(watchable.progress)?.episode.id } };
@@ -125,7 +125,7 @@ function scrollLeft() {
     slides.value.scroll({ left: slides.value.scrollLeft - document.body.clientWidth - sidePadding, behavior: "smooth" });
 }
 
-function slidePointerDown(watchable: Watchable & { progress: Progress[] }) {
+function slidePointerDown(watchable: Watchable & { progress?: Progress[] }) {
     if (isMobile) {
         router.push(getWatchableRoute(watchable));
     } else {
@@ -166,7 +166,7 @@ onMounted(() => {
             <div
                 class="slide"
                 v-for="watchable in props.watchables"
-                :class="{ 'no-progress': !API.getLatestProgress(watchable.progress) }"
+                :class="{ 'no-progress': watchable.progress ? !API.getLatestProgress(watchable.progress) : null }"
                 :id="'scroll-slide-' + watchable.id + '-' + sliderId"
             >
                 <Clickable
@@ -238,7 +238,7 @@ onMounted(() => {
                     </Teleport>
                 </Clickable>
 
-                <div class="progress" v-if="watchable.progress.length > 0">
+                <div class="progress" v-if="watchable.progress && watchable.progress.length > 0">
                     <div
                         class="value"
                         :style="{
