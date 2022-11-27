@@ -69,7 +69,6 @@ export class Indexer {
 
     private executeNextInQueue() {
         if (this.indexQueue.length > 0) {
-            this.logger.debug("Executing next queue item");
             this.triggerIndex(this.indexQueue[0].filePath, this.indexQueue[0]);
         }
     }
