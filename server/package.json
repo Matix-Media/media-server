@@ -33,7 +33,7 @@
         "mysql2": "^2.3.3",
         "parse-torrent-title": "^1.3.0",
         "reflect-metadata": "^0.1.13",
-        "sharp": "^0.31.1",
+        "sharp": "^0.32.6",
         "typeorm": "^0.3.10"
     }
 }
